@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador de Optimización de Ahorros</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #4f46e5;
+            --success: #16a34a;
+            --warning: #f59e0b;
+            --danger: #dc2626;
+            --background: #eff6ff;
+            --card-bg: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(to bottom right, var(--background), #e0e7ff);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 80rem;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem;
+            background: var(--card-bg);
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        h2, h3, h4 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .grid {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .grid-cols-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .grid-cols-5 {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .button:hover {
+            background: #1d4ed8;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .emergency-section, .dca-section {
+            background: linear-gradient(to right, #fef2f2, #fee2e2);
+            border: 2px solid #fecaca;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+        }
+
+        .results-section {
+            background: linear-gradient(to right, #3b82f6, #7c3aed);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+        }
+
+        .suggestion-card {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+        }
+
+        .chart-container {
+            height: 300px;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-cols-2, .grid-cols-5 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="4"/>
+            </svg>
+            Analizador de Optimización de Ahorros
+        </h1>
+        <div id="form-section" class="grid grid-cols-2">
+            <!-- Información Personal -->
+            <div>
+                <h2>Información Personal</h2>
+                <div class="input-group">
+                    <label>Total de Ahorros (€)</label>
+                    <input type="number" id="totalSavings" placeholder="50000">
+                </div>
+                <div class="input-group">
+                    <label>Edad</label>
+                    <input type="number" id="age" placeholder="35">
+                </div>
+                <div class="input-group">
+                    <label>Tolerancia al Riesgo</label>
+                    <select id="riskTolerance">
+                        <option value="conservative">Conservador</option>
+                        <option value="medium" selected>Moderado</option>
+                        <option value="aggressive">Agresivo</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Horizonte Temporal</label>
+                    <select id="timeHorizon">
+                        <option value="1-3">1-3 años</option>
+                        <option value="3-5">3-5 años</option>
+                        <option value="5-10" selected>5-10 años</option>
+                        <option value="10-20">10-20 años</option>
+                        <option value="20+">Más de 20 años</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Inflación Actual (%)</label>
+                    <input type="number" id="currentInflation" step="0.1" value="3.5">
+                </div>
+                <div class="input-group">
+                    <label>Aportación Mensual Total (€)</label>
+                    <input type="number" id="monthlyContribution" placeholder="500">
+                    <p class="text-sm text-gray-500">Cantidad que ahorras/inviertes mensualmente</p>
+                </div>
+                <div class="emergency-section">
+                    <h3>🆘 Fondo de Emergencia</h3>
+                    <div class="input-group">
+                        <label>Gastos Mensuales (€)</label>
+                        <input type="number" id="monthlyExpenses" placeholder="2000">
+                        <p class="text-sm text-red-600">Incluye: alquiler, comida, transporte, seguros, etc.</p>
+                    </div>
+                    <div class="input-group">
+                        <label>Meses de Gastos Cubiertos</label>
+                        <input type="number" id="emergencyFundMonths" step="0.5" placeholder="6">
+                        <p id="emergencyRecommendation" class="text-sm text-red-600"></p>
+                    </div>
+                    <div id="emergencyFundSummary" class="card" style="display: none;">
+                        <div class="flex justify-between">
+                            <span>Tu Fondo de Emergencia:</span>
+                            <span id="emergencyFundAmount" class="font-bold text-red-600"></span>
+                        </div>
+                        <p class="text-sm text-red-600">💡 Debe estar en cuenta remunerada (mín. 2%) o fondo monetario</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Distribución Actual -->
+            <div>
+                <h2>Distribución Actual de Ahorros</h2>
+                <div class="input-group">
+                    <label>Cuenta Corriente (€)</label>
+                    <input type="number" id="cashAccount" placeholder="0">
+                </div>
+                <div class="input-group flex gap-2">
+                    <div class="flex-1">
+                        <label>Cuenta Remunerada (€)</label>
+                        <input type="number" id="savingsAccount" placeholder="0">
+                    </div>
+                    <div class="w-20">
+                        <label>%</label>
+                        <input type="number" id="savingsRate" step="0.1" value="0.5">
+                    </div>
+                </div>
+                <div class="input-group flex gap-2">
+                    <div class="flex-1">
+                        <label>Fondo Monetario (€)</label>
+                        <input type="number" id="moneyMarket" placeholder="0">
+                    </div>
+                    <div class="w-20">
+                        <label>%</label>
+                        <input type="number" id="moneyMarketRate" step="0.1" value="4.5">
+                    </div>
+                </div>
+                <div class="input-group flex gap-2">
+                    <div class="flex-1">
+                        <label>Renta Fija/Bonos (€)</label>
+                        <input type="number" id="bonds" placeholder="0">
+                    </div>
+                    <div class="w-20">
+                        <label>%</label>
+                        <input type="number" id="bondsRate" step="0.1" value="3.5">
+                    </div>
+                </div>
+                <div class="input-group flex gap-2">
+                    <div class="flex-1">
+                        <label>Fondos Indexados (€)</label>
+                        <input type="number" id="indexFunds" placeholder="0">
+                    </div>
+                    <div class="w-20">
+                        <label>%</label>
+                        <input type="number" id="indexFundsRate" step="0.1" value="8">
+                    </div>
+                </div>
+                <div class="input-group flex gap-2">
+                    <div class="flex-1">
+                        <label>Renta Variable/Acciones (€)</label>
+                        <input type="number" id="stocks" placeholder="0">
+                    </div>
+                    <div class="w-20">
+                        <label>%</label>
+                        <input type="number" id="stocksRate" step="0.1" value="10">
+                    </div>
+                </div>
+                <div class="input-group flex gap-2">
+                    <div class="flex-1">
+                        <label>REITs/Inmobiliario (€)</label>
+                        <input type="number" id="realEstate" placeholder="0">
+                    </div>
+                    <div class="w-20">
+                        <label>%</label>
+                        <input type="number" id="realEstateRate" step="0.1" value="6">
+                    </div>
+                </div>
+                <div class="input-group flex gap-2">
+                    <div class="flex-1">
+                        <label>Criptomonedas (€)</label>
+                        <input type="number" id="crypto" placeholder="0">
+                    </div>
+                    <div class="w-20">
+                        <label>%</label>
+                        <input type="number" id="cryptoRate" step="0.1" value="15">
+                    </div>
+                </div>
+                <div class="input-group flex gap-2">
+                    <div class="flex-1">
+                        <label>Materias Primas (€)</label>
+                        <input type="number" id="commodities" placeholder="0">
+                    </div>
+                    <div class="w-20">
+                        <label>%</label>
+                        <input type="number" id="commoditiesRate" step="0.1" value="5">
+                    </div>
+                </div>
+                <div class="input-group flex gap-2">
+                    <div class="flex-1">
+                        <label>Otras Inversiones (€)</label>
+                        <input type="number" id="other" placeholder="0">
+                    </div>
+                    <div class="w-20">
+                        <label>%</label>
+                        <input type="number" id="otherRate" step="0.1" value="5">
+                    </div>
+                </div>
+                <div id="dca-section" class="dca-section" style="display: none;">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="2">
+                            <path d="M6 2h12v6H6zM3 12h18v2H3zM3 16h18v2H3zM3 20h18v2H3z"/>
+                        </svg>
+                        Distribución DCA Mensual
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="input-group">
+                            <label>A Cuenta Corriente</label>
+                            <input type="number" id="dcaCashAccount" placeholder="0">
+                        </div>
+                        <div class="input-group">
+                            <label>A Cuenta Remunerada</label>
+                            <input type="number" id="dcaSavingsAccount" placeholder="0">
+                        </div>
+                        <div class="input-group">
+                            <label>A Fondo Monetario</label>
+                            <input type="number" id="dcaMoneyMarket" placeholder="0">
+                        </div>
+                        <div class="input-group">
+                            <label>A Renta Fija</label>
+                            <input type="number" id="dcaBonds" placeholder="0">
+                        </div>
+                        <div class="input-group">
+                            <label>A Fondos Indexados</label>
+                            <input type="number" id="dcaIndexFunds" placeholder="0">
+                        </div>
+                        <div class="input-group">
+                            <label>A Renta Variable</label>
+                            <input type="number" id="dcaStocks" placeholder="0">
+                        </div>
+                        <div class="input-group">
+                            <label>A REITs</label>
+                            <input type="number" id="dcaRealEstate" placeholder="0">
+                        </div>
+                        <div class="input-group">
+                            <label>A Criptomonedas</label>
+                            <input type="number" id="dcaCrypto" placeholder="0">
+                        </div>
+                        <div class="input-group">
+                            <label>A Materias Primas</label>
+                            <input type="number" id="dcaCommodities" placeholder="0">
+                        </div>
+                        <div class="input-group">
+                            <label>A Otros</label>
+                            <input type="number" id="dcaOther" placeholder="0">
+                        </div>
+                    </div>
+                    <div id="dcaTotal" class="text-sm text-blue-600"></div>
+                </div>
+                <button class="button" onclick="calculateAnalysis()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                    Analizar Optimización
+                </button>
+            </div>
+        </div>
+        <div id="results-section" style="display: none;" class="space-y-8">
+            <!-- Puntuación General -->
+            <div class="results-section">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2>Puntuación de Optimización</h2>
+                        <p class="text-blue-100">Análisis basado en tu perfil y distribución actual</p>
+                    </div>
+                    <div class="text-center">
+                        <div id="optimizationScore" class="text-5xl font-bold"></div>
+                        <div class="text-blue-100">/ 100</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Métricas Clave -->
+            <div class="grid grid-cols-5 gap-6">
+                <div class="card">
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2">
+                            <path d="M12 2v6l3 3-3 3v6"/>
+                        </svg>
+                        <h3>Rendimiento Total</h3>
+                    </div>
+                    <div id="weightedReturn" class="text-2xl font-bold"></div>
+                    <div id="realReturn" class="text-sm text-gray-500"></div>
+                </div>
+                <div class="card">
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <circle cx="12" cy="12" r="4"/>
+                        </svg>
+                        <h3>Potencial Optimizado</h3>
+                    </div>
+                    <div id="potentialReturn" class="text-2xl font-bold"></div>
+                    <div id="potentialRealReturn" class="text-sm text-gray-500"></div>
+                </div>
+                <div class="card">
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2">
+                            <path d="M3 3h18v18H3z"/>
+                        </svg>
+                        <h3>Fondo Emergencia</h3>
+                    </div>
+                    <div id="emergencyFundMonths" class="text-2xl font-bold"></div>
+                    <div id="emergencyFundStatus" class="text-sm text-gray-500"></div>
+                </div>
+                <div class="card">
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2">
+                            <path d="M12 2v20M2 12h20"/>
+                        </svg>
+                        <h3>Patrimonio Invertible</h3>
+                    </div>
+                    <div id="investableAmount" class="text-2xl font-bold"></div>
+                    <div class="text-sm text-gray-500">Tras fondo emergencia</div>
+                </div>
+                <div class="card">
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2">
+                            <path d="M6 2h12v6H6zM3 12h18v2H3zM3 16h18v2H3zM3 20h18v2H3z"/>
+                        </svg>
+                        <h3>Con DCA</h3>
+                    </div>
+                    <div id="dcaProjection" class="text-2xl font-bold"></div>
+                    <div class="text-sm text-gray-500">Total proyectado</div>
+                </div>
+            </div>
+            <!-- Gráficos -->
+            <div class="grid grid-cols-2 gap-8">
+                <div class="card">
+                    <h3>Distribución Actual</h3>
+                    <canvas id="distributionChart" class="chart-container"></canvas>
+                </div>
+                <div class="card">
+                    <h3>Proyección a <span id="projectionYears"></span> años</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between p-3 bg-red-50 rounded">
+                            <span>Actual</span>
+                            <span id="currentProjection" class="font-bold text-red-600"></span>
+                        </div>
+                        <div class="flex justify-between p-3 bg-green-50 rounded">
+                            <span>Optimizado</span>
+                            <span id="optimizedProjection" class="font-bold text-green-600"></span>
+                        </div>
+                        <div class="flex justify-between p-3 bg-blue-50 rounded">
+                            <span>Con DCA</span>
+                            <span id="dcaProjectionResult" class="font-bold text-blue-600"></span>
+                        </div>
+                        <div class="flex justify-between p-3 bg-gray-50 rounded">
+                            <span>Ajustado por Inflación</span>
+                            <span id="inflationAdjusted" class="font-bold text-gray-600"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Plan de Rebalanceado -->
+            <div id="rebalance-section" class="card" style="display: none;">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2">
+                        <path d="M4 12h16M12 4l8 8-8 8"/>
+                    </svg>
+                    Plan de Rebalanceado Inmediato
+                </h3>
+                <div id="rebalanceRecommendations" class="space-y-3"></div>
+            </div>
+            <!-- DCA Recomendado -->
+            <div id="dca-recommended-section" class="card" style="display: none;">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2">
+                        <path d="M6 2h12v6H6zM3 12h18v2H3zM3 16h18v2H3zM3 20h18v2H3z"/>
+                    </svg>
+                    Distribución DCA Recomendada
+                </h3>
+                <div id="recommendedDCA" class="grid grid-cols-4 gap-4"></div>
+            </div>
+            <!-- Sugerencias Creativas -->
+            <div class="card">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+                        <path d="M12 2v2m0 18v-2m10-10h-2M2 12h2m15-7l-1.4-1.4M5.4 19.4L4 18m1.4-13.4L4 6m15.4 11.4L18 18"/>
+                    </svg>
+                    Sugerencias Inteligentes
+                </h3>
+                <div id="creativeSuggestions" class="grid grid-cols-2 gap-4"></div>
+            </div>
+            <!-- Distribución Objetivo -->
+            <div class="card">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2">
+                        <path d="M3 3h18v18H3z"/>
+                    </svg>
+                    Distribución Objetivo
+                </h3>
+                <div class="emergency-section mb-6">
+                    <h4>Fondo de Emergencia</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="card">
+                            <div>Opción A: Cuenta Remunerada</div>
+                            <div id="emergencyOptionA" class="text-lg font-bold"></div>
+                            <div class="text-sm text-gray-600">Mínimo 2% rentabilidad anual</div>
+                        </div>
+                        <div class="card">
+                            <div>Opción B: Fondo Monetario</div>
+                            <div id="emergencyOptionB" class="text-lg font-bold"></div>
+                            <div class="text-sm text-gray-600">Liquidez inmediata ~4-5%</div>
+                        </div>
+                    </div>
+                    <div class="card mt-3">
+                        <div class="flex justify-between">
+                            <span>Tu situación actual:</span>
+                            <span id="emergencyStatus" class="font-bold"></span>
+                        </div>
+                    </div>
+                </div>
+                <h4 id="investableTitle"></h4>
+                <div id="recommendedDistribution" class="grid grid-cols-4 gap-4"></div>
+            </div>
+            <div class="flex justify-center">
+                <button class="button" onclick="showForm()">Nuevo Análisis</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let formData = {
+            totalSavings: '',
+            age: '',
+            riskTolerance: 'medium',
+            timeHorizon: '5-10',
+            currentInflation: '3.5',
+            monthlyContribution: '',
+            monthlyExpenses: '',
+            emergencyFundMonths: '',
+            includeRealEstate: true,
+            includeCrypto: false,
+            includeCommodities: true,
+            includeInternational: true,
+            includeTechStocks: true,
+            sustainableInvesting: false,
+            cashAccount: '',
+            savingsAccount: '',
+            savingsRate: '0.5',
+            moneyMarket: '',
+            moneyMarketRate: '4.5',
+            bonds: '',
+            bondsRate: '3.5',
+            indexFunds: '',
+            indexFundsRate: '8',
+            stocks: '',
+            stocksRate: '10',
+            realEstate: '',
+            realEstateRate: '6',
+            crypto: '',
+            cryptoRate: '15',
+            commodities: '',
+            commoditiesRate: '5',
+            other: '',
+            otherRate: '5',
+            dcaCashAccount: '',
+            dcaSavingsAccount: '',
+            dcaMoneyMarket: '',
+            dcaBonds: '',
+            dcaIndexFunds: '',
+            dcaStocks: '',
+            dcaRealEstate: '',
+            dcaCrypto: '',
+            dcaCommodities: '',
+            dcaOther: ''
+        };
+
+        let analysis = null;
+        let distributionChart = null;
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
+        }
+
+        function formatPercentage(value) {
+            return `${value.toFixed(2)}%`;
+        }
+
+        function getScoreColor(score) {
+            if (score >= 80) return 'text-green-600';
+            if (score >= 60) return 'text-yellow-600';
+            return 'text-red-600';
+        }
+
+        function getAssetName(key) {
+            const names = {
+                cashAccount: 'Cuenta Corriente',
+                savingsAccount: 'Cuenta Remunerada',
+                moneyMarket: 'Fondo Monetario',
+                bonds: 'Renta Fija',
+                indexFunds: 'Fondos Indexados',
+                stocks: 'Renta Variable',
+                realEstate: 'Inmobiliario',
+                crypto: 'Criptomonedas',
+                commodities: 'Materias Primas',
+                other: 'Otros'
+            };
+            return names[key] || key;
+        }
+
+        function getCategoryColor(category) {
+            const colors = {
+                critico: 'bg-red-200 text-red-900 border-red-300',
+                urgente: 'bg-red-100 text-red-800 border-red-200',
+                riesgo: 'bg-orange-100 text-orange-800 border-orange-200',
+                optimizacion: 'bg-blue-100 text-blue-800 border-blue-200',
+                diversificacion: 'bg-purple-100 text-purple-800 border-purple-200',
+                fiscal: 'bg-green-100 text-green-800 border-green-200',
+                estrategia: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                proteccion: 'bg-gray-100 text-gray-800 border-gray-200',
+                inflacion: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                seguridad: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+                automatizacion: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                valores: 'bg-teal-100 text-teal-800 border-teal-200',
+                sectores: 'bg-violet-100 text-violet-800 border-violet-200'
+            };
+            return colors[category] || 'bg-gray-100 text-gray-800 border-gray-200';
+        }
+
+        function updateFormData() {
+            formData.totalSavings = document.getElementById('totalSavings').value;
+            formData.age = document.getElementById('age').value;
+            formData.riskTolerance = document.getElementById('riskTolerance').value;
+            formData.timeHorizon = document.getElementById('timeHorizon').value;
+            formData.currentInflation = document.getElementById('currentInflation').value;
+            formData.monthlyContribution = document.getElementById('monthlyContribution').value;
+            formData.monthlyExpenses = document.getElementById('monthlyExpenses').value;
+            formData.emergencyFundMonths = document.getElementById('emergencyFundMonths').value;
+            formData.cashAccount = document.getElementById('cashAccount').value;
+            formData.savingsAccount = document.getElementById('savingsAccount').value;
+            formData.savingsRate = document.getElementById('savingsRate').value;
+            formData.moneyMarket = document.getElementById('moneyMarket').value;
+            formData.moneyMarketRate = document.getElementById('moneyMarketRate').value;
+            formData.bonds = document.getElementById('bonds').value;
+            formData.bondsRate = document.getElementById('bondsRate').value;
+            formData.indexFunds = document.getElementById('indexFunds').value;
+            formData.indexFundsRate = document.getElementById('indexFundsRate').value;
+            formData.stocks = document.getElementById('stocks').value;
+            formData.stocksRate = document.getElementById('stocksRate').value;
+            formData.realEstate = document.getElementById('realEstate').value;
+            formData.realEstateRate = document.getElementById('realEstateRate').value;
+            formData.crypto = document.getElementById('crypto').value;
+            formData.cryptoRate = document.getElementById('cryptoRate').value;
+            formData.commodities = document.getElementById('commodities').value;
+            formData.commoditiesRate = document.getElementById('commoditiesRate').value;
+            formData.other = document.getElementById('other').value;
+            formData.otherRate = document.getElementById('otherRate').value;
+            formData.dcaCashAccount = document.getElementById('dcaCashAccount').value;
+            formData.dcaSavingsAccount = document.getElementById('dcaSavingsAccount').value;
+            formData.dcaMoneyMarket = document.getElementById('dcaMoneyMarket').value;
+            formData.dcaBonds = document.getElementById('dcaBonds').value;
+            formData.dcaIndexFunds = document.getElementById('dcaIndexFunds').value;
+            formData.dcaStocks = document.getElementById('dcaStocks').value;
+            formData.dcaRealEstate = document.getElementById('dcaRealEstate').value;
+            formData.dcaCrypto = document.getElementById('dcaCrypto').value;
+            formData.dcaCommodities = document.getElementById('dcaCommodities').value;
+            formData.dcaOther = document.getElementById('dcaOther').value;
+
+            // Update emergency fund recommendation
+            const risk = formData.riskTolerance;
+            document.getElementById('emergencyRecommendation').textContent = 
+                risk === 'aggressive' ? '🎯 Recomendado para perfil agresivo: 3-6 meses' :
+                risk === 'medium' ? '🎯 Recomendado para perfil moderado: 6 meses' :
+                '🎯 Recomendado para perfil conservador: 6-12 meses';
+
+            // Update emergency fund summary
+            if (formData.monthlyExpenses && formData.emergencyFundMonths) {
+                const amount = parseFloat(formData.monthlyExpenses) * parseFloat(formData.emergencyFundMonths);
+                document.getElementById('emergencyFundAmount').textContent = formatCurrency(amount);
+                document.getElementById('emergencyFundSummary').style.display = 'block';
+            } else {
+                document.getElementById('emergencyFundSummary').style.display = 'none';
+            }
+
+            // Update DCA section visibility
+            if (formData.monthlyContribution && parseFloat(formData.monthlyContribution) > 0) {
+                document.getElementById('dca-section').style.display = 'block';
+                const totalDCA = Object.values({
+                    dcaCashAccount: formData.dcaCashAccount,
+                    dcaSavingsAccount: formData.dcaSavingsAccount,
+                    dcaMoneyMarket: formData.dcaMoneyMarket,
+                    dcaBonds: formData.dcaBonds,
+                    dcaIndexFunds: formData.dcaIndexFunds,
+                    dcaStocks: formData.dcaStocks,
+                    dcaRealEstate: formData.dcaRealEstate,
+                    dcaCrypto: formData.dcaCrypto,
+                    dcaCommodities: formData.dcaCommodities,
+                    dcaOther: formData.dcaOther
+                }).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
+                document.getElementById('dcaTotal').textContent = `Total DCA: €${totalDCA}`;
+                document.getElementById('dca-section').querySelector('h3').textContent = 
+                    `Distribución DCA Mensual (€${formData.monthlyContribution})`;
+            } else {
+                document.getElementById('dca-section').style.display = 'none';
+            }
+        }
+
+        function calculateAnalysis() {
+            updateFormData();
+            const total = parseFloat(formData.totalSavings) || 0;
+            if (total === 0) return;
+
+            const inflation = parseFloat(formData.currentInflation) || 3.5;
+            const monthlyContribution = parseFloat(formData.monthlyContribution) || 0;
+            const monthlyExpenses = parseFloat(formData.monthlyExpenses) || (monthlyContribution * 3) || 1500;
+            const userEmergencyMonths = parseFloat(formData.emergencyFundMonths) || 0;
+
+            const getRecommendedEmergencyMonths = () => {
+                switch (formData.riskTolerance) {
+                    case 'conservative': return 9;
+                    case 'medium': return 6;
+                    case 'aggressive': return 4.5;
+                    default: return 6;
+                }
+            };
+
+            const recommendedEmergencyMonths = getRecommendedEmergencyMonths();
+            const recommendedEmergencyFund = monthlyExpenses * recommendedEmergencyMonths;
+            const currentEmergencyFund = userEmergencyMonths * monthlyExpenses;
+
+            const distribution = {
+                cashAccount: parseFloat(formData.cashAccount) || 0,
+                savingsAccount: parseFloat(formData.savingsAccount) || 0,
+                moneyMarket: parseFloat(formData.moneyMarket) || 0,
+                bonds: parseFloat(formData.bonds) || 0,
+                indexFunds: parseFloat(formData.indexFunds) || 0,
+                stocks: parseFloat(formData.stocks) || 0,
+                realEstate: parseFloat(formData.realEstate) || 0,
+                crypto: parseFloat(formData.crypto) || 0,
+                commodities: parseFloat(formData.commodities) || 0,
+                other: parseFloat(formData.other) || 0
+            };
+
+            const liquidAssets = distribution.cashAccount + distribution.savingsAccount + distribution.moneyMarket;
+            const savingsRate = parseFloat(formData.savingsRate) || 0;
+            const moneyMarketRate = parseFloat(formData.moneyMarketRate) || 0;
+            const qualityEmergencyFund = 
+                (distribution.savingsAccount * (savingsRate >= 2 ? 1 : 0.5)) +
+                (distribution.moneyMarket * 1) +
+                (distribution.cashAccount * 0);
+            const hasAdequateEmergencyFund = qualityEmergencyFund >= recommendedEmergencyFund;
+            const emergencyFundShortfall = Math.max(0, recommendedEmergencyFund - qualityEmergencyFund);
+            const investableAmount = Math.max(0, total - recommendedEmergencyFund);
+
+            const dcaDistribution = {
+                cashAccount: parseFloat(formData.dcaCashAccount) || 0,
+                savingsAccount: parseFloat(formData.dcaSavingsAccount) || 0,
+                moneyMarket: parseFloat(formData.dcaMoneyMarket) || 0,
+                bonds: parseFloat(formData.dcaBonds) || 0,
+                indexFunds: parseFloat(formData.dcaIndexFunds) || 0,
+                stocks: parseFloat(formData.dcaStocks) || 0,
+                realEstate: parseFloat(formData.dcaRealEstate) || 0,
+                crypto: parseFloat(formData.dcaCrypto) || 0,
+                commodities: parseFloat(formData.dcaCommodities) || 0,
+                other: parseFloat(formData.dcaOther) || 0
+            };
+
+            const totalAllocated = Object.values(distribution).reduce((sum, val) => sum + val, 0);
+            const totalDCA = Object.values(dcaDistribution).reduce((sum, val) => sum + val, 0);
+            const investedAmount = totalAllocated - liquidAssets;
+            const weightedReturn = investedAmount > 0 ? (
+                (distribution.bonds * parseFloat(formData.bondsRate)) +
+                (distribution.indexFunds * parseFloat(formData.indexFundsRate)) +
+                (distribution.stocks * parseFloat(formData.stocksRate)) +
+                (distribution.realEstate * parseFloat(formData.realEstateRate)) +
+                (distribution.crypto * parseFloat(formData.cryptoRate)) +
+                (distribution.commodities * parseFloat(formData.commoditiesRate)) +
+                (distribution.other * parseFloat(formData.otherRate))
+            ) / investedAmount : 0;
+
+            const emergencyFundReturn = liquidAssets > 0 ? (
+                (distribution.cashAccount * 0) +
+                (distribution.savingsAccount * parseFloat(formData.savingsRate)) +
+                (distribution.moneyMarket * parseFloat(formData.moneyMarketRate))
+            ) / liquidAssets : 0;
+
+            const getRecommendedAllocation = () => {
+                const age = parseInt(formData.age) || 30;
+                const riskTolerance = formData.riskTolerance;
+                const emergencyAllocation = {
+                    cashAccount: 0,
+                    savingsAccount: recommendedEmergencyFund * 0.4,
+                    moneyMarket: recommendedEmergencyFund * 0.6
+                };
+                let investmentRecommendations = {};
+
+                if (riskTolerance === 'conservative') {
+                    investmentRecommendations = {
+                        bonds: 45,
+                        indexFunds: 40,
+                        stocks: 10,
+                        realEstate: formData.includeRealEstate ? 5 : 0,
+                        crypto: 0,
+                        commodities: 0,
+                        other: 0
+                    };
+                } else if (riskTolerance === 'aggressive') {
+                    investmentRecommendations = {
+                        bonds: 15,
+                        indexFunds: 45,
+                        stocks: 25,
+                        realEstate: formData.includeRealEstate ? 8 : 0,
+                        crypto: formData.includeCrypto ? 4 : 0,
+                        commodities: formData.includeCommodities ? 3 : 0,
+                        other: 0
+                    };
+                } else {
+                    investmentRecommendations = {
+                        bonds: 30,
+                        indexFunds: 45,
+                        stocks: 15,
+                        realEstate: formData.includeRealEstate ? 5 : 0,
+                        crypto: formData.includeCrypto ? 2 : 0,
+                        commodities: formData.includeCommodities ? 3 : 0,
+                        other: 0
+                    };
+                }
+
+                const excludedTotal = 
+                    (!formData.includeRealEstate ? (investmentRecommendations.realEstate || 0) : 0) +
+                    (!formData.includeCrypto ? (investmentRecommendations.crypto || 0) : 0) +
+                    (!formData.includeCommodities ? (investmentRecommendations.commodities || 0) : 0);
+
+                if (excludedTotal > 0) {
+                    investmentRecommendations.indexFunds += excludedTotal * 0.7;
+                    investmentRecommendations.bonds += excludedTotal * 0.3;
+                    if (!formData.includeRealEstate) investmentRecommendations.realEstate = 0;
+                    if (!formData.includeCrypto) investmentRecommendations.crypto = 0;
+                    if (!formData.includeCommodities) investmentRecommendations.commodities = 0;
+                }
+
+                return {
+                    cashAccount: emergencyAllocation.cashAccount,
+                    savingsAccount: emergencyAllocation.savingsAccount,
+                    moneyMarket: emergencyAllocation.moneyMarket,
+                    bonds: (investmentRecommendations.bonds / 100) * investableAmount,
+                    indexFunds: (investmentRecommendations.indexFunds / 100) * investableAmount,
+                    stocks: (investmentRecommendations.stocks / 100) * investableAmount,
+                    realEstate: (investmentRecommendations.realEstate / 100) * investableAmount,
+                    crypto: (investmentRecommendations.crypto / 100) * investableAmount,
+                    commodities: (investmentRecommendations.commodities / 100) * investableAmount,
+                    other: (investmentRecommendations.other / 100) * investableAmount
+                };
+            };
+
+            const recommended = getRecommendedAllocation();
+
+            const getRecommendedDCA = () => {
+                const riskTolerance = formData.riskTolerance;
+                let dcaRec;
+
+                if (riskTolerance === 'conservative') {
+                    dcaRec = {
+                        cashAccount: 0,
+                        savingsAccount: 15,
+                        moneyMarket: 10,
+                        bonds: 45,
+                        indexFunds: 30,
+                        stocks: 0,
+                        realEstate: 0,
+                        crypto: 0,
+                        commodities: 0,
+                        other: 0
+                    };
+                } else if (riskTolerance === 'aggressive') {
+                    dcaRec = {
+                        cashAccount: 0,
+                        savingsAccount: 5,
+                        moneyMarket: 5,
+                        bonds: 10,
+                        indexFunds: 50,
+                        stocks: 20,
+                        realEstate: formData.includeRealEstate ? 5 : 0,
+                        crypto: formData.includeCrypto ? 3 : 0,
+                        commodities: formData.includeCommodities ? 2 : 0,
+                        other: 0
+                    };
+                    const excludedTotal = 
+                        (!formData.includeRealEstate ? 5 : 0) +
+                        (!formData.includeCrypto ? 3 : 0) +
+                        (!formData.includeCommodities ? 2 : 0);
+                    if (excludedTotal > 0) {
+                        dcaRec.indexFunds += excludedTotal * 0.8;
+                        dcaRec.stocks += excludedTotal * 0.2;
+                    }
+                } else {
+                    dcaRec = {
+                        cashAccount: 0,
+                        savingsAccount: 10,
+                        moneyMarket: 5,
+                        bonds: 20,
+                        indexFunds: 50,
+                        stocks: 10,
+                        realEstate: formData.includeRealEstate ? 3 : 0,
+                        crypto: formData.includeCrypto ? 1 : 0,
+                        commodities: formData.includeCommodities ? 1 : 0,
+                        other: 0
+                    };
+                    const excludedTotal = 
+                        (!formData.includeRealEstate ? 3 : 0) +
+                        (!formData.includeCrypto ? 1 : 0) +
+                        (!formData.includeCommodities ? 1 : 0);
+                    if (excludedTotal > 0) {
+                        dcaRec.indexFunds += excludedTotal * 0.7;
+                        dcaRec.bonds += excludedTotal * 0.3;
+                    }
+                }
+                return dcaRec;
+            };
+
+            const recommendedDCA = getRecommendedDCA();
+
+            const potentialReturn = (
+                (recommended.savingsAccount * parseFloat(formData.savingsRate)) +
+                (recommended.moneyMarket * parseFloat(formData.moneyMarketRate)) +
+                (recommended.bonds * parseFloat(formData.bondsRate)) +
+                (recommended.indexFunds * parseFloat(formData.indexFundsRate)) +
+                (recommended.stocks * parseFloat(formData.stocksRate)) +
+                (recommended.realEstate * parseFloat(formData.realEstateRate)) +
+                (recommended.crypto * parseFloat(formData.cryptoRate)) +
+                (recommended.commodities * parseFloat(formData.commoditiesRate)) +
+                (recommended.other * parseFloat(formData.otherRate))
+            ) / total;
+
+            const calculateScore = () => {
+                let score = 100;
+                if (!hasAdequateEmergencyFund) {
+                    const shortfallPercent = (emergencyFundShortfall / recommendedEmergencyFund) * 100;
+                    score -= shortfallPercent * 0.5;
+                }
+                const excessCash = Math.max(0, distribution.cashAccount - (recommendedEmergencyFund * 0.1));
+                if (excessCash > 0) {
+                    const excessPercent = (excessCash / totalAllocated) * 100;
+                    score -= excessPercent * 2;
+                }
+                if (hasAdequateEmergencyFund) {
+                    const goodEmergencyStructure = 
+                        (distribution.savingsAccount > 0 && savingsRate >= 2) || 
+                        (distribution.moneyMarket > 0);
+                    if (goodEmergencyStructure) score += 15;
+                }
+                const investmentAssets = Object.keys(distribution).filter(key => 
+                    !['cashAccount', 'savingsAccount', 'moneyMarket'].includes(key) && distribution[key] > 0
+                ).length;
+                if (investmentAssets < 2) score -= 20;
+                const totalReturn = (weightedReturn * investedAmount + emergencyFundReturn * liquidAssets) / totalAllocated;
+                const realReturn = totalReturn - inflation;
+                if (realReturn > 0) score += Math.min(20, realReturn * 3);
+                else score -= Math.abs(realReturn) * 5;
+                if (monthlyContribution > 0) score += 10;
+                if (totalDCA === monthlyContribution) score += 5;
+                return Math.max(0, Math.min(100, score));
+            };
+
+            const optimizationScore = calculateScore();
+            const projectionYears = parseInt(formData.timeHorizon.split('-')[1]) || 10;
+            const currentProjection = total * Math.pow(1 + ((weightedReturn * investedAmount + emergencyFundReturn * liquidAssets) / totalAllocated) / 100, projectionYears);
+            const optimizedProjection = total * Math.pow(1 + potentialReturn / 100, projectionYears);
+            const inflationAdjustedCurrent = total * Math.pow(1 + inflation / 100, projectionYears);
+            const dcaProjection = monthlyContribution > 0 ? 
+                monthlyContribution * 12 * (Math.pow(1 + potentialReturn / 100, projectionYears) - 1) / (potentialReturn / 100) : 0;
+
+            const generateRebalanceRecommendations = () => {
+                const recommendations = [];
+                if (!hasAdequateEmergencyFund) {
+                    recommendations.push({
+                        type: 'emergency',
+                        asset: 'Fondo de Emergencia',
+                        current: formatCurrency(qualityEmergencyFund),
+                        target: formatCurrency(recommendedEmergencyFund),
+                        amount: formatCurrency(emergencyFundShortfall),
+                        priority: 'critical',
+                        description: `Necesitas ${formatCurrency(emergencyFundShortfall)} adicionales en activos líquidos de calidad (≥2%)`
+                    });
+                }
+                if (hasAdequateEmergencyFund) {
+                    Object.keys(distribution).forEach(asset => {
+                        if (['cashAccount', 'savingsAccount', 'moneyMarket'].includes(asset)) return;
+                        const current = distribution[asset];
+                        const target = recommended[asset];
+                        const difference = current - target;
+                        if (Math.abs(difference) > total * 0.02) {
+                            if (difference > 0) {
+                                recommendations.push({
+                                    type: 'reduce',
+                                    asset: getAssetName(asset),
+                                    current: formatCurrency(current),
+                                    target: formatCurrency(target),
+                                    amount: formatCurrency(difference),
+                                    priority: Math.abs(difference) > total * 0.1 ? 'high' : 'medium'
+                                });
+                            } else {
+                                recommendations.push({
+                                    type: 'increase',
+                                    asset: getAssetName(asset),
+                                    current: formatCurrency(current),
+                                    target: formatCurrency(target),
+                                    amount: formatCurrency(Math.abs(difference)),
+                                    priority: Math.abs(difference) > total * 0.1 ? 'high' : 'medium'
+                                });
+                            }
+                        }
+                    });
+                }
+                return recommendations.sort((a, b) => {
+                    const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+                    return priorityOrder[b.priority] - priorityOrder[a.priority];
+                });
+            };
+
+            const generateCreativeSuggestions = () => {
+                const suggestions = [];
+                const age = parseInt(formData.age) || 30;
+                if (!hasAdequateEmergencyFund) {
+                    suggestions.push({
+                        icon: '🚨',
+                        title: 'URGENTE: Fondo de Emergencia',
+                        description: `Te faltan ${formatCurrency(emergencyFundShortfall)} para cubrir ${recommendedEmergencyMonths} meses de gastos.`,
+                        action: 'Prioriza completar tu fondo de emergencia antes que invertir',
+                        category: 'critico'
+                    });
+                } else {
+                    suggestions.push({
+                        icon: '✅',
+                        title: 'Fondo de Emergencia Completo',
+                        description: `Tienes ${formatCurrency(liquidAssets)} cubriendo ${(liquidAssets/monthlyExpenses).toFixed(1)} meses de gastos.`,
+                        action: 'Excelente base de seguridad financiera',
+                        category: 'seguridad'
+                    });
+                }
+                if (hasAdequateEmergencyFund) {
+                    const lowYieldEmergencyFund = distribution.cashAccount + (savingsRate < 2 ? distribution.savingsAccount : 0);
+                    const lowYieldPercent = lowYieldEmergencyFund / qualityEmergencyFund;
+                    if (lowYieldPercent > 0.3) {
+                        suggestions.push({
+                            icon: '🏦',
+                            title: 'Optimiza tu Fondo de Emergencia',
+                            description: `Parte de tu fondo de emergencia tiene rentabilidad inferior al 2%.`,
+                            action: 'Mueve a cuenta remunerada ≥2% o fondo monetario',
+                            category: 'optimizacion'
+                        });
+                    } else {
+                        suggestions.push({
+                            icon: '✅',
+                            title: 'Fondo de Emergencia Óptimo',
+                            description: `Tienes ${formatCurrency(qualityEmergencyFund)} bien estructurado con rentabilidad adecuada.`,
+                            action: 'Mantén esta excelente base de seguridad',
+                            category: 'seguridad'
+                        });
+                    }
+                }
+                if (hasAdequateEmergencyFund) {
+                    if (age < 35 && formData.riskTolerance !== 'conservative') {
+                        suggestions.push({
+                            icon: '🚀',
+                            title: 'Aprovecha tu juventud',
+                            description: 'Con tu fondo de emergencia seguro, puedes asumir más riesgo en inversiones.',
+                            action: 'Sube indexados al 40-50%',
+                            category: 'riesgo'
+                        });
+                    } else if (age > 55) {
+                        suggestions.push({
+                            icon: '🛡️',
+                            title: 'Protege tu patrimonio',
+                            description: 'Considera aumentar la renta fija y reducir la volatilidad gradualmente.',
+                            action: 'Aumenta bonos al 35-40%',
+                            category: 'proteccion'
+                        });
+                    }
+                    if (formData.riskTolerance === 'aggressive' && !formData.includeRealEstate) {
+                        suggestions.push({
+                            icon: '🏢',
+                            title: 'Considera REITs',
+                            description: 'Con tu perfil agresivo y fondo de emergencia completo, los REITs diversifican.',
+                            action: 'Evalúa 3-8% en REITs',
+                            category: 'diversificacion'
+                        });
+                    }
+                    if (formData.riskTolerance === 'aggressive' && !formData.includeCrypto && investableAmount > 15000) {
+                        suggestions.push({
+                            icon: '₿',
+                            title: 'Micro-exposición crypto',
+                            description: 'Con tu patrimonio invertible y base sólida, una pequeña exposición puede diversificar.',
+                            action: 'Considera máximo 2-4%',
+                            category: 'diversificacion'
+                        });
+                    }
+                    if (formData.riskTolerance !== 'conservative') {
+                        const totalEquities = distribution.indexFunds + distribution.stocks;
+                        if (totalEquities > investableAmount * 0.3 && formData.includeInternational) {
+                            suggestions.push({
+                                icon: '🌍',
+                                title: 'Diversifica geográficamente',
+                                description: 'Reduce el riesgo país con exposición internacional.',
+                                action: 'Añade fondos globales/emergentes',
+                                category: 'diversificacion'
+                            });
+                        }
+                    }
+                    const totalReturn = (weightedReturn * investedAmount + emergencyFundReturn * liquidAssets) / totalAllocated;
+                    const realReturn = totalReturn - inflation;
+                    if (realReturn < 2) {
+                        if (formData.riskTolerance === 'conservative') {
+                            suggestions.push({
+                                icon: '⚡',
+                                title: 'Protege contra inflación (conservador)',
+                                description: 'Tu rendimiento real está muy bajo. Considera TIPS o bonos indexados.',
+                                action: 'Aumenta bonos indexados a inflación',
+                                category: 'inflacion'
+                            });
+                        } else if (formData.includeCommodities) {
+                            suggestions.push({
+                                icon: '⚡',
+                                title: 'Protege contra inflación',
+                                description: 'Tu rendimiento real está muy bajo. Necesitas activos reales.',
+                                action: 'Aumenta REITs y materias primas',
+                                category: 'inflacion'
+                            });
+                        }
+                    }
+                }
+                if (monthlyContribution === 0) {
+                    suggestions.push({
+                        icon: '💰',
+                        title: 'Implementa Dollar Cost Averaging',
+                        description: 'Las aportaciones regulares promedian los precios y crean disciplina.',
+                        action: hasAdequateEmergencyFund ? 'Empieza con 200-500€/mes' : 'Primero completa tu fondo de emergencia',
+                        category: 'estrategia'
+                    });
+                } else if (totalDCA < monthlyContribution) {
+                    suggestions.push({
+                        icon: '📊',
+                        title: 'Optimiza tu DCA',
+                        description: `Tienes ${formatCurrency(monthlyContribution - totalDCA)} sin distribuir en tu DCA mensual.`,
+                        action: 'Asigna todo tu DCA según perfil',
+                        category: 'optimizacion'
+                    });
+                }
+                if (formData.sustainableInvesting && (distribution.indexFunds + distribution.stocks) > 0) {
+                    suggestions.push({
+                        icon: '🌱',
+                        title: 'Inversión sostenible',
+                        description: 'Considera fondos ESG que alineen tus valores con tu inversión.',
+                        action: 'Explora fondos sostenibles',
+                        category: 'valores'
+                    });
+                }
+                if (investableAmount > 25000) {
+                    suggestions.push({
+                        icon: '📈',
+                        title: 'Optimización fiscal',
+                        description: 'Con tu patrimonio invertible, considera vehículos fiscalmente eficientes.',
+                        action: 'Evalúa seguros unit-linked o PPA',
+                        category: 'fiscal'
+                    });
+                }
+                const investmentAssets = Object.keys(distribution).filter(key => 
+                    !['cashAccount', 'savingsAccount', 'moneyMarket'].includes(key) && distribution[key] > 0
+                ).length;
+                if (investmentAssets > 4) {
+                    suggestions.push({
+                        icon: '⚙️',
+                        title: 'Automatiza el rebalanceado',
+                        description: 'Con múltiples activos, considera rebalanceado automático.',
+                        action: 'Configura revisión trimestral',
+                        category: 'automatizacion'
+                    });
+                }
+                if (distribution.crypto > 0) {
+                    const cryptoPercent = (distribution.crypto / investableAmount) * 100;
+                    if (cryptoPercent > 5 || (cryptoPercent > 2 && formData.riskTolerance === 'conservative')) {
+                        suggestions.push({
+                            icon: '⚠️',
+                            title: 'Cuidado con crypto',
+                            description: `${cryptoPercent.toFixed(1)}% en crypto es arriesgado para tu perfil.`,
+                            action: formData.riskTolerance === 'conservative' ? 'Eliminar o máximo 1%' : 'Máximo 3-5% del patrimonio invertible',
+                            category: 'riesgo'
+                        });
+                    }
+                }
+                if (formData.includeTechStocks && formData.riskTolerance !== 'conservative' && hasAdequateEmergencyFund) {
+                    const techExposure = distribution.stocks * 0.3;
+                    if (techExposure < investableAmount * 0.05) {
+                        suggestions.push({
+                            icon: '💻',
+                            title: 'Exposición tecnológica',
+                            description: 'El sector tech impulsa el crecimiento económico actual.',
+                            action: 'Considera ETFs de tecnología',
+                            category: 'sectores'
+                        });
+                    }
+                }
+                return suggestions.slice(0, 8);
+            };
+
+            analysis = {
+                distribution,
+                dcaDistribution,
+                totalAllocated,
+                totalDCA,
+                monthlyContribution,
+                monthlyExpenses,
+                weightedReturn: (weightedReturn * investedAmount + emergencyFundReturn * liquidAssets) / totalAllocated,
+                potentialReturn,
+                optimizationScore,
+                recommended,
+                recommendedDCA,
+                emergencyFund: {
+                    current: liquidAssets,
+                    recommended: recommendedEmergencyFund,
+                    months: liquidAssets / monthlyExpenses,
+                    recommendedMonths: recommendedEmergencyMonths,
+                    hasAdequate: hasAdequateEmergencyFund,
+                    shortfall: emergencyFundShortfall,
+                    quality: emergencyFundReturn
+                },
+                investableAmount,
+                projections: {
+                    current: currentProjection,
+                    optimized: optimizedProjection,
+                    inflationAdjusted: inflationAdjustedCurrent,
+                    withDCA: optimizedProjection + dcaProjection,
+                    years: projectionYears
+                },
+                realReturn: ((weightedReturn * investedAmount + emergencyFundReturn * liquidAssets) / totalAllocated) - inflation,
+                potentialRealReturn: potentialReturn - inflation,
+                rebalanceRecommendations: generateRebalanceRecommendations(),
+                creativeSuggestions: generateCreativeSuggestions()
+            };
+
+            // Display results
+            document.getElementById('form-section').style.display = 'none';
+            document.getElementById('results-section').style.display = 'block';
+
+            document.getElementById('optimizationScore').textContent = analysis.optimizationScore.toFixed(0);
+            document.getElementById('optimizationScore').className = `text-5xl font-bold ${getScoreColor(analysis.optimizationScore)}`;
+            document.getElementById('weightedReturn').textContent = formatPercentage(analysis.weightedReturn);
+            document.getElementById('realReturn').textContent = `Rendimiento Real: ${formatPercentage(analysis.realReturn)}`;
+            document.getElementById('potentialReturn').textContent = formatPercentage(analysis.potentialReturn);
+            document.getElementById('potentialRealReturn').textContent = `Rendimiento Real: ${formatPercentage(analysis.potentialRealReturn)}`;
+            document.getElementById('emergencyFundMonths').textContent = `${analysis.emergencyFund.months.toFixed(1)}M`;
+            document.getElementById('emergencyFundMonths').className = `text-2xl font-bold ${analysis.emergencyFund.hasAdequate ? 'text-green-600' : 'text-red-600'}`;
+            document.getElementById('emergencyFundStatus').textContent = analysis.emergencyFund.hasAdequate ? 
+                '✅ Adecuado' : `❌ Faltan ${formatCurrency(analysis.emergencyFund.shortfall)}`;
+            document.getElementById('investableAmount').textContent = formatCurrency(analysis.investableAmount);
+            document.getElementById('dcaProjection').textContent = formatCurrency(analysis.projections.withDCA);
+            document.getElementById('currentProjection').textContent = formatCurrency(analysis.projections.current);
+            document.getElementById('optimizedProjection').textContent = formatCurrency(analysis.projections.optimized);
+            document.getElementById('dcaProjectionResult').textContent = formatCurrency(analysis.projections.withDCA);
+            document.getElementById('inflationAdjusted').textContent = formatCurrency(analysis.projections.inflationAdjusted);
+            document.getElementById('projectionYears').textContent = analysis.projections.years;
+
+            // Distribution Chart
+            const pieData = Object.entries(analysis.distribution)
+                .filter(([_, value]) => value > 0)
+                .map(([key, value]) => ({
+                    name: getAssetName(key),
+                    value,
+                    percentage: (value / analysis.totalAllocated * 100).toFixed(1)
+                }));
+
+            if (distributionChart) distributionChart.destroy();
+            distributionChart = new Chart(document.getElementById('distributionChart'), {
+                type: 'pie',
+                data: {
+                    labels: pieData.map(d => `${d.name}: ${d.percentage}%`),
+                    datasets: [{
+                        data: pieData.map(d => d.value),
+                        backgroundColor: ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98fb98']
+                    }]
+                },
+                options: {
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => formatCurrency(ctx.raw)
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Rebalance Recommendations
+            const rebalanceSection = document.getElementById('rebalance-section');
+            const rebalanceRecommendations = document.getElementById('rebalanceRecommendations');
+            if (analysis.rebalanceRecommendations.length > 0) {
+                rebalanceSection.style.display = 'block';
+                rebalanceRecommendations.innerHTML = analysis.rebalanceRecommendations.map(rec => `
+                    <div class="p-4 rounded-lg border-l-4 ${rec.priority === 'high' ? 'border-red-500 bg-red-50' : 'border-yellow-500 bg-yellow-50'}">
+                        <div class="flex justify-between">
+                            <div>
+                                <h4 class="font-semibold">${rec.type === 'reduce' ? '📉 Reducir' : '📈 Aumentar'} ${rec.asset}</h4>
+                                <p class="text-sm text-gray-600">Actual: ${rec.current} → Objetivo: ${rec.target}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-bold">${rec.amount}</div>
+                                <div class="text-xs px-2 py-1 rounded ${rec.priority === 'high' ? 'bg-red-200 text-red-800' : 'bg-yellow-200 text-yellow-800'}">
+                                    ${rec.priority === 'high' ? 'Alta prioridad' : 'Media prioridad'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                rebalanceSection.style.display = 'none';
+            }
+
+            // DCA Recommended
+            const dcaSection = document.getElementById('dca-recommended-section');
+            const recommendedDCA = document.getElementById('recommendedDCA');
+            if (analysis.monthlyContribution > 0) {
+                dcaSection.style.display = 'block';
+                dcaSection.querySelector('h3').textContent = `Distribución DCA Recomendada (€${analysis.monthlyContribution}/mes)`;
+                recommendedDCA.innerHTML = Object.entries(analysis.recommendedDCA)
+                    .filter(([_, value]) => value > 0)
+                    .map(([key, value]) => `
+                        <div class="bg-indigo-50 p-3 rounded-lg">
+                            <div class="text-sm font-medium text-indigo-800">${getAssetName(key)}</div>
+                            <div class="text-lg font-bold text-indigo-600">${value}%</div>
+                            <div class="text-xs text-indigo-600">${formatCurrency((value / 100) * analysis.monthlyContribution)}</div>
+                        </div>
+                    `).join('');
+            } else {
+                dcaSection.style.display = 'none';
+            }
+
+            // Creative Suggestions
+            document.getElementById('creativeSuggestions').innerHTML = analysis.creativeSuggestions.map(suggestion => `
+                <div class="suggestion-card ${getCategoryColor(suggestion.category)}">
+                    <span class="text-2xl">${suggestion.icon}</span>
+                    <div>
+                        <h4 class="font-semibold">${suggestion.title}</h4>
+                        <p class="text-sm">${suggestion.description}</p>
+                        <div class="text-xs font-medium opacity-80">💡 ${suggestion.action}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Recommended Distribution
+            document.getElementById('emergencyOptionA').textContent = formatCurrency(analysis.emergencyFund.recommended);
+            document.getElementById('emergencyOptionB').textContent = formatCurrency(analysis.emergencyFund.recommended);
+            document.getElementById('emergencyStatus').textContent = 
+                `${analysis.emergencyFund.hasAdequate ? '✅ Completo' : '❌ Insuficiente'} (${analysis.emergencyFund.months.toFixed(1)} meses)`;
+            document.getElementById('emergencyStatus').className = `font-bold ${analysis.emergencyFund.hasAdequate ? 'text-green-600' : 'text-red-600'}`;
+            document.getElementById('investableTitle').textContent = `📈 Patrimonio Invertible (${formatCurrency(analysis.investableAmount)})`;
+            document.getElementById('recommendedDistribution').innerHTML = Object.entries(analysis.recommended)
+                .filter(([key, value]) => !['cashAccount', 'savingsAccount', 'moneyMarket'].includes(key) && value > 0)
+                .map(([key, value]) => {
+                    const current = analysis.distribution[key] || 0;
+                    const targetPercent = (value / analysis.investableAmount * 100);
+                    const currentPercent = analysis.investableAmount > 0 ? (current / analysis.investableAmount * 100) : 0;
+                    const isGood = Math.abs(currentPercent - targetPercent) <= 3;
+                    return `
+                        <div class="p-3 rounded-lg border-2 ${isGood ? 'border-green-200 bg-green-50' : 'border-orange-200 bg-orange-50'}">
+                            <div class="text-sm font-medium">${getAssetName(key)}</div>
+                            <div class="text-lg font-bold">${formatCurrency(value)}</div>
+                            <div class="text-xs text-gray-600">${targetPercent.toFixed(1)}% del invertible</div>
+                            <div class="text-xs text-gray-600">Actual: ${formatCurrency(current)}</div>
+                            <div class="text-xs ${isGood ? 'text-green-600' : 'text-orange-600'}">${isGood ? '✅ Bien' : '⚠️ Ajustar'}</div>
+                        </div>
+                    `;
+                }).join('');
+        }
+
+        function showForm() {
+            document.getElementById('form-section').style.display = 'block';
+            document.getElementById('results-section').style.display = 'none';
+            if (distributionChart) distributionChart.destroy();
+            updateFormData();
+        }
+
+        // Initialize form
+        document.querySelectorAll('input, select').forEach(element => {
+            element.addEventListener('input', updateFormData);
+        });
+        updateFormData();
+    </script>
+</body>
+</html>
