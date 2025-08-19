@@ -435,7 +435,7 @@
                         </svg>
                         <h3>Fondo Emergencia</h3>
                     </div>
-                    <div id="emergencyFundMonths" class="text-2xl font-bold"></div>
+                    <div id="emergencyFundMonthsResult" class="text-2xl font-bold"></div>
                     <div id="emergencyFundStatus" class="text-sm text-gray-500"></div>
                 </div>
                 <div class="card">
@@ -991,7 +991,8 @@
 
             const optimizationScore = calculateScore();
             const projectionYears = parseInt(formData.timeHorizon.split('-')[1]) || 10;
-            const currentProjection = total * Math.pow(1 + ((weightedReturn * investedAmount + emergencyFundReturn * liquidAssets) / totalAllocated) / 100, projectionYears);
+            const avgReturn = totalAllocated > 0 ? ((weightedReturn * investedAmount + emergencyFundReturn * liquidAssets) / totalAllocated) : 0;
+const currentProjection = total * Math.pow(1 + avgReturn / 100, projectionYears);
             const optimizedProjection = total * Math.pow(1 + potentialReturn / 100, projectionYears);
             const inflationAdjustedCurrent = total * Math.pow(1 + inflation / 100, projectionYears);
             const dcaProjection = monthlyContribution > 0 ? 
@@ -1270,7 +1271,10 @@
             document.getElementById('results-section').style.display = 'block';
 
             document.getElementById('optimizationScore').textContent = analysis.optimizationScore.toFixed(0);
-            document.getElementById('optimizationScore').className = `text-5xl font-bold ${getScoreColor(analysis.optimizationScore)}`;
+            const scoreEl = document.getElementById('optimizationScore');
+scoreEl.textContent = analysis.optimizationScore.toFixed(0);
+scoreEl.classList.remove('text-green-600','text-yellow-600','text-red-600');
+scoreEl.classList.add(getScoreColor(analysis.optimizationScore));
             document.getElementById('weightedReturn').textContent = formatPercentage(analysis.weightedReturn);
             document.getElementById('realReturn').textContent = `Rendimiento Real: ${formatPercentage(analysis.realReturn)}`;
             document.getElementById('potentialReturn').textContent = formatPercentage(analysis.potentialReturn);
