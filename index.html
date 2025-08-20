@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador de Optimización de Ahorros</title>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.5/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .icon {
+            font-size: 2rem;
+            display: inline-block;
+            line-height: 1;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #374151;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .field-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .field label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .field input, .field select {
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .field input:focus, .field select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .field-help {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .preferences-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #ede9fe 100%);
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .preferences-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #3730a3;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .preferences-help {
+            font-size: 0.875rem;
+            color: #4338ca;
+            margin-bottom: 1rem;
+        }
+
+        .preference-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-bottom: 0.75rem;
+        }
+
+        .preference-info h4 {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .preference-info p {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle input {
+            width: 0;
+            height: 0;
+            opacity: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #d1d5db;
+            transition: .2s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .2s;
+            border-radius: 50%;
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background-color: #3b82f6;
+        }
+
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        .toggle input:disabled + .toggle-slider {
+            background-color: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        .emergency-section {
+            background: linear-gradient(135deg, #fef2f2 0%, #fef3e2 100%);
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .emergency-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #991b1b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .emergency-current {
+            background: white;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .emergency-current-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .emergency-current-amount {
+            font-weight: bold;
+            color: #dc2626;
+        }
+
+        .dca-section {
+            background: linear-gradient(135deg, #eff6ff 0%, #ddd6fe 100%);
+            border: 2px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+
+        .dca-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #3730a3;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dca-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .dca-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .dca-field label {
+            font-weight: 500;
+            color: #3730a3;
+            margin-bottom: 0.25rem;
+        }
+
+        .dca-field input {
+            border-color: #c7d2fe;
+        }
+
+        .dca-field input:focus {
+            box-shadow: 0 0 0 2px #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .dca-total {
+            margin-top: 0.75rem;
+            font-size: 0.875rem;
+            color: #4338ca;
+        }
+
+        .analyze-button {
+            width: 100%;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .analyze-button:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            transform: translateY(-1px);
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .score-card {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            color: white;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .score-info h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .score-info p {
+            color: #c7d2fe;
+        }
+
+        .score-display {
+            text-align: center;
+        }
+
+        .score-number {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .score-total {
+            color: #c7d2fe;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .metric-header h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-subtitle {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .projections {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .projection-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-radius: 6px;
+        }
+
+        .projection-current {
+            background: #fef2f2;
+        }
+
+        .projection-optimized {
+            background: #f0fdf4;
+        }
+
+        .projection-dca {
+            background: #eff6ff;
+        }
+
+        .projection-inflation {
+            background: #f9fafb;
+        }
+
+        .projection-label {
+            font-weight: 500;
+        }
+
+        .projection-value {
+            font-weight: bold;
+        }
+
+        .projection-current .projection-value {
+            color: #dc2626;
+        }
+
+        .projection-optimized .projection-value {
+            color: #16a34a;
+        }
+
+        .projection-dca .projection-value {
+            color: #2563eb;
+        }
+
+        .projection-inflation .projection-value {
+            color: #6b7280;
+        }
+
+        .recommendations {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .recommendations h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .recommendation-item {
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+        }
+
+        .recommendation-critical {
+            border-left-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .recommendation-high {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .recommendation-medium {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .recommendation-info h4 {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .recommendation-info p {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .recommendation-action {
+            text-align: right;
+        }
+
+        .recommendation-amount {
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .recommendation-priority {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .priority-critical {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .priority-high {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .priority-medium {
+            background: #fde68a;
+            color: #92400e;
+        }
+
+        .suggestions {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .suggestions h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .suggestions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .suggestions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .suggestion-item {
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .suggestion-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .suggestion-content h4 {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .suggestion-content p {
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .suggestion-action {
+            font-size: 0.75rem;
+            font-weight: 500;
+            opacity: 0.8;
+        }
+
+        .category-critico {
+            background: #fecaca;
+            color: #991b1b;
+            border-color: #fca5a5;
+        }
+
+        .category-urgente {
+            background: #fecaca;
+            color: #991b1b;
+            border-color: #fca5a5;
+        }
+
+        .category-riesgo {
+            background: #fed7aa;
+            color: #ea580c;
+            border-color: #fdba74;
+        }
+
+        .category-optimizacion {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border-color: #93c5fd;
+        }
+
+        .category-diversificacion {
+            background: #e9d5ff;
+            color: #7c2d12;
+            border-color: #c4b5fd;
+        }
+
+        .category-fiscal {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+
+        .category-estrategia {
+            background: #e0e7ff;
+            color: #3730a3;
+            border-color: #c7d2fe;
+        }
+
+        .category-proteccion {
+            background: #f3f4f6;
+            color: #374151;
+            border-color: #d1d5db;
+        }
+
+        .category-inflacion {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fde68a;
+        }
+
+        .category-seguridad {
+            background: #cffafe;
+            color: #0e7490;
+            border-color: #67e8f9;
+        }
+
+        .category-automatizacion {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: #86efac;
+        }
+
+        .category-valores {
+            background: #ccfbf1;
+            color: #134e4a;
+            border-color: #5eead4;
+        }
+
+        .category-sectores {
+            background: #ede9fe;
+            color: #5b21b6;
+            border-color: #c4b5fd;
+        }
+
+        .distribution {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .distribution h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .emergency-fund-section {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .emergency-fund-title {
+            font-weight: 600;
+            color: #991b1b;
+            margin-bottom: 0.75rem;
+        }
+
+        .emergency-fund-help {
+            font-size: 0.875rem;
+            color: #dc2626;
+            margin-bottom: 0.75rem;
+        }
+
+        .emergency-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .emergency-options {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .emergency-option {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 0.75rem;
+        }
+
+        .emergency-option h5 {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .emergency-option .amount {
+            font-size: 1.125rem;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .emergency-option .rate {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .emergency-option .tip {
+            font-size: 0.75rem;
+            color: #16a34a;
+        }
+
+        .emergency-status {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 0.5rem;
+            margin-top: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .emergency-status-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .emergency-status-value {
+            font-size: 0.875rem;
+            font-weight: bold;
+        }
+
+        .status-complete {
+            color: #16a34a;
+        }
+
+        .status-insufficient {
+            color: #dc2626;
+        }
+
+        .investment-section {
+            margin-top: 1rem;
+        }
+
+        .investment-title {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.75rem;
+        }
+
+        .investment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .investment-item {
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 2px solid;
+        }
+
+        .investment-good {
+            border-color: #bbf7d0;
+            background: #f0fdf4;
+        }
+
+        .investment-adjust {
+            border-color: #fdba74;
+            background: #fffbeb;
+        }
+
+        .investment-item h5 {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .investment-item .amount {
+            font-size: 1.125rem;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .investment-item .percentage {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .investment-item .current {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .investment-item .status {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .status-good {
+            color: #16a34a;
+        }
+
+        .status-adjust {
+            color: #ea580c;
+        }
+
+        .new-analysis-button {
+            background: #6b7280;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: block;
+            margin: 2rem auto 0;
+        }
+
+        .new-analysis-button:hover {
+            background: #4b5563;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .icon-green { color: #16a34a; }
+        .icon-blue { color: #2563eb; }
+        .icon-purple { color: #7c3aed; }
+        .icon-indigo { color: #4f46e5; }
+        .icon-red { color: #dc2626; }
+        .icon-yellow { color: #d97706; }
+
+        canvas {
+            max-height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <span class="icon">🎯</span>
+                Analizador de Optimización de Ahorros
+            </h1>
+        </div>
+
+        <div id="form-section">
+            <form id="savings-form">
+                <div class="form-grid">
+                    <!-- Información Personal -->
+                    <div class="form-section">
+                        <h2 class="section-title">Información Personal</h2>
+                        
+                        <div class="field">
+                            <label for="totalSavings">Total de Ahorros (€)</label>
+                            <input type="number" id="totalSavings" placeholder="50000" min="0" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="age">Edad</label>
+                            <input type="number" id="age" placeholder="35" min="0" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="riskTolerance">Tolerancia al Riesgo</label>
+                            <select id="riskTolerance">
+                                <option value="conservative">Conservador</option>
+                                <option value="medium" selected>Moderado</option>
+                                <option value="aggressive">Agresivo</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="timeHorizon">Horizonte Temporal</label>
+                            <select id="timeHorizon">
+                                <option value="1-3">1-3 años</option>
+                                <option value="3-5">3-5 años</option>
+                                <option value="5-10" selected>5-10 años</option>
+                                <option value="10-20">10-20 años</option>
+                                <option value="20+">Más de 20 años</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="currentInflation">Inflación Actual (%)</label>
+                            <input type="number" step="0.1" id="currentInflation" value="3.5" min="0" required>
+                        </div>
+
+                        <!-- Fondo de Emergencia -->
+                        <div class="emergency-section">
+                            <h3 class="emergency-title">
+                                🆘 Fondo de Emergencia
+                            </h3>
+                            <div class="field">
+                                <label for="monthlyExpenses">Gastos Mensuales (€)</label>
+                                <input type="number" id="monthlyExpenses" placeholder="2000" min="0" required>
+                                <div class="field-help" style="color: #dc2626;">Incluye: alquiler, comida, transporte, seguros, etc.</div>
+                            </div>
+                            
+                            <div class="field">
+                                <label for="emergencyFundMonths">Meses de Gastos Cubiertos</label>
+                                <input type="number" step="0.5" id="emergencyFundMonths" placeholder="6" min="0" required>
+                                <div class="field-help" id="emergencyRecommendation" style="color: #dc2626;"></div>
+                            </div>
+                            
+                            <div id="emergencyCalculation" class="emergency-current" style="display: none;">
+                                <div class="emergency-current-row">
+                                    <span class="emergency-current-label">Tu Fondo de Emergencia:</span>
+                                    <span class="emergency-current-amount" id="emergencyAmount"></span>
+                                </div>
+                                <div class="field-help" style="color: #dc2626; margin-top: 0.25rem;">
+                                    💡 Debe estar en cuenta remunerada (mín. 2%) o fondo monetario
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preferencias de Inversión -->
+                        <div class="preferences-section">
+                            <h3 class="preferences-title">
+                                🎯 Preferencias de Inversión
+                            </h3>
+                            <div class="preferences-help">Personaliza tus recomendaciones según tus preferencias</div>
+                            
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <h4>🏢 Inmobiliario (REITs)</h4>
+                                    <p>Riesgo: 4/7 - Diversificación y protección inflación</p>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" id="includeRealEstate" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <h4>₿ Criptomonedas</h4>
+                                    <p>Riesgo: 7/7 - Alta volatilidad, potencial alto retorno</p>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" id="includeCrypto">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <h4>🥇 Materias Primas</h4>
+                                    <p>Riesgo: 5/7 - Protección contra inflación, volatilidad moderada</p>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" id="includeCommodities">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="preference-item">
+                                <div class="preference-info">
+                                    <h4>🌿 Inversiones Sostenibles (ESG)</h4>
+                                    <p>Riesgo: 3/7 - Enfoque ético, crecimiento a largo plazo</p>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" id="includeESG" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inversiones Actuales -->
+                    <div class="form-section">
+                        <h2 class="section-title">Inversiones Actuales</h2>
+
+                        <div class="field">
+                            <label for="cashAmount">Cantidad en Liquidez (€)</label>
+                            <input type="number" id="cashAmount" placeholder="10000" min="0" required>
+                            <div class="field-help">Efectivo, cuentas de ahorro, etc.</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="stocksAmount">Cantidad en Renta Variable (€)</label>
+                            <input type="number" id="stocksAmount" placeholder="25000" min="0" required>
+                            <div class="field-help">Acciones, fondos de inversión, ETFs</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="bondsAmount">Cantidad en Renta Fija (€)</label>
+                            <input type="number" id="bondsAmount" placeholder="10000" min="0" required>
+                            <div class="field-help">Bonos, letras del tesoro, etc.</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="otherAmount">Cantidad en Otros (€)</label>
+                            <input type="number" id="otherAmount" placeholder="5000" min="0" required>
+                            <div class="field-help">Criptomonedas, inmobiliario, etc.</div>
+                        </div>
+
+                        <!-- DCA (Dollar Cost Averaging) -->
+                        <div class="dca-section">
+                            <h3 class="dca-title">
+                                📈 Estrategia DCA
+                            </h3>
+                            <div class="dca-grid">
+                                <div class="dca-field">
+                                    <label for="dcaAmount">Aportación Mensual (€)</label>
+                                    <input type="number" id="dcaAmount" placeholder="300" min="0" required>
+                                </div>
+                                <div class="dca-field">
+                                    <label for="dcaFrequency">Frecuencia</label>
+                                    <select id="dcaFrequency">
+                                        <option value="monthly" selected>Mensual</option>
+                                        <option value="quarterly">Trimestral</option>
+                                        <option value="yearly">Anual</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="dca-total" id="dcaTotal">Aportación Anual Estimada: €0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="analyze-button" aria-label="Analizar optimización de ahorros">
+                    <span class="icon">🔍</span>
+                    Analizar Optimización
+                </button>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="results">
+            <div class="score-card">
+                <div class="score-info">
+                    <h2>Tu Puntuación de Optimización</h2>
+                    <p>Basado en tus datos financieros y preferencias</p>
+                </div>
+                <div class="score-display">
+                    <div class="score-number" id="optimizationScore">85</div>
+                    <div class="score-total">/100</div>
+                </div>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="icon icon-green">✅</span>
+                        <h3>Fondo de Emergencia</h3>
+                    </div>
+                    <div class="metric-value" id="emergencyStatus">Completo</div>
+                    <div class="metric-subtitle">6 meses cubiertos</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="icon icon-blue">📊</span>
+                        <h3>Diversificación</h3>
+                    </div>
+                    <div class="metric-value" id="diversificationScore">75%</div>
+                    <div class="metric-subtitle">Distribución de activos</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="icon icon-purple">🚀</span>
+                        <h3>Rendimiento Esperado</h3>
+                    </div>
+                    <div class="metric-value" id="expectedReturn">5.2%</div>
+                    <div class="metric-subtitle">Anual ajustado por inflación</div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">Distribución Actual vs Óptima</h3>
+                    <canvas id="allocationChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">Proyección de Crecimiento</h3>
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+
+            <div class="projections">
+                <h3>Proyecciones a 5 años</h3>
+                <div class="projection-item projection-current">
+                    <span class="projection-label">Escenario Actual</span>
+                    <span class="projection-value" id="currentProjection">€0</span>
+                </div>
+                <div class="projection-item projection-optimized">
+                    <span class="projection-label">Escenario Optimizado</span>
+                    <span class="projection-value" id="optimizedProjection">€0</span>
+                </div>
+                <div class="projection-item projection-dca">
+                    <span class="projection-label">Con Estrategia DCA</span>
+                    <span class="projection-value" id="dcaProjection">€0</span>
+                </div>
+                <div class="projection-item projection-inflation">
+                    <span class="projection-label">Ajustado por Inflación</span>
+                    <span class="projection-value" id="inflationProjection">€0</span>
+                </div>
+            </div>
+
+            <div class="recommendations">
+                <h3>
+                    <span class="icon icon-red">⚠️</span>
+                    Recomendaciones Clave
+                </h3>
+                <div id="recommendations-list"></div>
+            </div>
+
+            <div class="suggestions">
+                <h3>
+                    <span class="icon icon-blue">💡</span>
+                    Sugerencias de Optimización
+                </h3>
+                <div class="suggestions-grid" id="suggestions-list"></div>
+            </div>
+
+            <div class="distribution">
+                <h3>
+                    <span class="icon icon-indigo">📊</span>
+                    Distribución Recomendada
+                </h3>
+                <div class="investment-grid" id="recommended-distribution"></div>
+            </div>
+
+            <button class="new-analysis-button">Nuevo Análisis</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Chart.js charts
+        const allocationChart = new Chart(document.getElementById('allocationChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Liquidez', 'Renta Variable', 'Renta Fija', 'Otros'],
+                datasets: [
+                    {
+                        label: 'Actual',
+                        data: [20, 50, 20, 10],
+                        backgroundColor: ['#3b82f6', '#16a34a', '#f59e0b', '#6b7280'],
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Óptima',
+                        data: [15, 60, 20, 5],
+                        backgroundColor: ['#3b82f6', '#16a34a', '#f59e0b', '#6b7280'],
+                        borderWidth: 1,
+                        hidden: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        const growthChart = new Chart(document.getElementById('growthChart'), {
+            type: 'line',
+            data: {
+                labels: ['Año 1', 'Año 2', 'Año 3', 'Año 4', 'Año 5'],
+                datasets: [
+                    {
+                        label: 'Crecimiento Actual',
+                        data: [50000, 52000, 54080, 56243, 58573],
+                        borderColor: '#dc2626',
+                        fill: false
+                    },
+                    {
+                        label: 'Crecimiento Optimizado',
+                        data: [50000, 53000, 56180, 59551, 63124],
+                        borderColor: '#16a34a',
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+
+        // Form handling
+        const formSection = document.getElementById('form-section');
+        const resultsSection = document.getElementById('results-section');
+        const analyzeButton = document.querySelector('.analyze-button');
+        const newAnalysisButton = document.querySelector('.new-analysis-button');
+
+        analyzeButton.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent form submission
+            // Validate inputs
+            const totalSavings = parseFloat(document.getElementById('totalSavings').value) || 0;
+            const monthlyExpenses = parseFloat(document.getElementById('monthlyExpenses').value) || 0;
+            const emergencyFundMonths = parseFloat(document.getElementById('emergencyFundMonths').value) || 0;
+            const cashAmount = parseFloat(document.getElementById('cashAmount').value) || 0;
+            const stocksAmount = parseFloat(document.getElementById('stocksAmount').value) || 0;
+            const bondsAmount = parseFloat(document.getElementById('bondsAmount').value) || 0;
+            const otherAmount = parseFloat(document.getElementById('otherAmount').value) || 0;
+            const dcaAmount = parseFloat(document.getElementById('dcaAmount').value) || 0;
+            const dcaFrequency = document.getElementById('dcaFrequency').value;
+
+            // Check for negative values
+            if ([totalSavings, monthlyExpenses, emergencyFundMonths, cashAmount, stocksAmount, bondsAmount, otherAmount, dcaAmount].some(val => val < 0)) {
+                alert('Por favor, introduce valores no negativos.');
+                return;
+            }
+
+            // Check if investment amounts sum to totalSavings
+            const totalInvestments = cashAmount + stocksAmount + bondsAmount + otherAmount;
+            if (Math.abs(totalInvestments - totalSavings) > 0.01) {
+                alert('La suma de las cantidades en inversiones debe ser igual al total de ahorros.');
+                return;
+            }
+
+            // Calculate percentages
+            const cashPercentage = totalSavings > 0 ? (cashAmount / totalSavings) * 100 : 0;
+            const stocksPercentage = totalSavings > 0 ? (stocksAmount / totalSavings) * 100 : 0;
+            const bondsPercentage = totalSavings > 0 ? (bondsAmount / totalSavings) * 100 : 0;
+            const otherPercentage = totalSavings > 0 ? (otherAmount / totalSavings) * 100 : 0;
+
+            formSection.classList.add('hidden');
+            resultsSection.classList.add('show');
+
+            // Calculate emergency fund
+            const emergencyFund = monthlyExpenses * emergencyFundMonths;
+            document.getElementById('emergencyAmount').textContent = `€${emergencyFund.toFixed(2)}`;
+            document.getElementById('emergencyCalculation').style.display = 'block';
+            document.getElementById('emergencyStatus').textContent = emergencyFund >= monthlyExpenses * 6 ? 'Completo' : 'Insuficiente';
+            document.getElementById('emergencyStatus').className = emergencyFund >= monthlyExpenses * 6 ? 'metric-value status-complete' : 'metric-value status-insufficient';
+
+            // Update allocation chart
+            allocationChart.data.datasets[0].data = [cashPercentage, stocksPercentage, bondsPercentage, otherPercentage];
+            allocationChart.update();
+
+            // Calculate projections
+            const currentReturn = 0.04; // 4% annual return
+            const optimizedReturn = 0.06; // 6% annual return
+            const years = 5;
+            const multiplier = dcaFrequency === 'monthly' ? 12 : dcaFrequency === 'quarterly' ? 4 : 1;
+            const annualContribution = dcaAmount * multiplier;
+
+            const calculateProjection = (principal, annualContribution, rate, years) => {
+                if (rate === 0) return principal + (annualContribution * years);
+                return principal * Math.pow(1 + rate, years) + (annualContribution * ((Math.pow(1 + rate, years) - 1) / rate));
+            };
+
+            const currentProjection = calculateProjection(totalSavings, annualContribution, currentReturn, years);
+            const optimizedProjection = calculateProjection(totalSavings, annualContribution, optimizedReturn, years);
+            const dcaProjection = totalSavings + (annualContribution * years);
+            const inflationProjection = optimizedProjection / Math.pow(1 + (parseFloat(document.getElementById('currentInflation').value) || 0) / 100, years);
+
+            document.getElementById('currentProjection').textContent = `€${currentProjection.toFixed(2)}`;
+            document.getElementById('optimizedProjection').textContent = `€${optimizedProjection.toFixed(2)}`;
+            document.getElementById('dcaProjection').textContent = `€${dcaProjection.toFixed(2)}`;
+            document.getElementById('inflationProjection').textContent = `€${inflationProjection.toFixed(2)}`;
+
+            // Update growth chart
+            growthChart.data.datasets[0].data = Array.from({length: 5}, (_, i) => calculateProjection(totalSavings, annualContribution, currentReturn, i + 1));
+            growthChart.data.datasets[1].data = Array.from({length: 5}, (_, i) => calculateProjection(totalSavings, annualContribution, optimizedReturn, i + 1));
+            growthChart.update();
+
+            // Calculate optimization score
+            const diversificationScore = Math.min(100, 100 - Math.abs(cashPercentage - 15) - Math.abs(stocksPercentage - 60) - Math.abs(bondsPercentage - 20) - Math.abs(otherPercentage - 5));
+            document.getElementById('diversificationScore').textContent = `${diversificationScore.toFixed(0)}%`;
+            const optimizationScore = Math.round((diversificationScore + (emergencyFund >= monthlyExpenses * 6 ? 100 : 50)) / 2);
+            document.getElementById('optimizationScore').textContent = optimizationScore;
+
+            // Generate recommendations
+            const recommendationsList = document.getElementById('recommendations-list');
+            recommendationsList.innerHTML = '';
+            if (emergencyFund < monthlyExpenses * 3) {
+                recommendationsList.innerHTML += `
+                    <div class="recommendation-item recommendation-critical">
+                        <div class="recommendation-info">
+                            <h4>Fondo de Emergencia Crítico</h4>
+                            <p>Aumenta tu fondo de emergencia a al menos 3-6 meses de gastos.</p>
+                        </div>
+                        <div class="recommendation-action">
+                            <div class="recommendation-amount">€${(monthlyExpenses * 6 - emergencyFund).toFixed(2)}</div>
+                            <div class="recommendation-priority priority-critical">Crítico</div>
+                        </div>
+                    </div>
+                `;
+            }
+            if (cashPercentage > 30) {
+                recommendationsList.innerHTML += `
+                    <div class="recommendation-item recommendation-high">
+                        <div class="recommendation-info">
+                            <h4>Exceso de Liquidez</h4>
+                            <p>Reduce la liquidez y considera invertir en activos con mayor retorno.</p>
+                        </div>
+                        <div class="recommendation-action">
+                            <div class="recommendation-amount">€${(cashAmount - (totalSavings * 0.15)).toFixed(2)}</div>
+                            <div class="recommendation-priority priority-high">Alta</div>
+                        </div>
+                    </div>
+                `;
+            }
+            if (document.getElementById('includeCrypto').checked && otherPercentage < 5) {
+                recommendationsList.innerHTML += `
+                    <div class="recommendation-item recommendation-medium">
+                        <div class="recommendation-info">
+                            <h4>Incluir Criptomonedas</h4>
+                            <p>Considera asignar un pequeño porcentaje a criptomonedas para diversificación.</p>
+                        </div>
+                        <div class="recommendation-action">
+                            <div class="recommendation-amount">€${(totalSavings * 0.05 - otherAmount).toFixed(2)}</div>
+                            <div class="recommendation-priority priority-medium">Media</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Generate suggestions
+            const suggestionsList = document.getElementById('suggestions-list');
+            suggestionsList.innerHTML = `
+                <div class="suggestion-item category-optimizacion">
+                    <span class="suggestion-icon">📈</span>
+                    <div class="suggestion-content">
+                        <h4>Optimización de Cartera</h4>
+                        <p>Ajusta la distribución para maximizar retornos según tu tolerancia al riesgo.</p>
+                        <div class="suggestion-action">Revisar ETFs de bajo costo</div>
+                    </div>
+                </div>
+                <div class="suggestion-item category-diversificacion">
+                    <span class="suggestion-icon">🌍</span>
+                    <div class="suggestion-content">
+                        <h4>Diversificación Global</h4>
+                        <p>Incluye activos internacionales para reducir riesgos locales.</p>
+                        <div class="suggestion-action">Explorar fondos globales</div>
+                    </div>
+                </div>
+            `;
+
+            // Generate recommended distribution
+            const recommendedDistribution = document.getElementById('recommended-distribution');
+            const allocations = [
+                { name: 'Liquidez', recommendedPercentage: 15, current: cashAmount, recommendedAmount: totalSavings * 0.15 },
+                { name: 'Renta Variable', recommendedPercentage: 60, current: stocksAmount, recommendedAmount: totalSavings * 0.60 },
+                { name: 'Renta Fija', recommendedPercentage: 20, current: bondsAmount, recommendedAmount: totalSavings * 0.20 },
+                { name: 'Otros', recommendedPercentage: 5, current: otherAmount, recommendedAmount: totalSavings * 0.05 }
+            ];
+            recommendedDistribution.innerHTML = allocations.map(alloc => {
+                const currentPercentage = totalSavings > 0 ? (alloc.current / totalSavings) * 100 : 0;
+                const status = Math.abs(currentPercentage - alloc.recommendedPercentage) <= 5 ? 'status-good' : 'status-adjust';
+                const statusText = status === 'status-good' ? 'Óptimo' : 'Ajustar';
+                return `
+                    <div class="investment-item ${status === 'status-good' ? 'investment-good' : 'investment-adjust'}">
+                        <h5>${alloc.name}</h5>
+                        <div class="amount">€${alloc.recommendedAmount.toFixed(2)} (${alloc.recommendedPercentage}%)</div>
+                        <div class="current">Actual: €${alloc.current.toFixed(2)} (${currentPercentage.toFixed(1)}%)</div>
+                        <div class="status ${status}">${statusText}</div>
+                    </div>
+                `;
+            }).join('');
+        });
+
+        newAnalysisButton.addEventListener('click', () => {
+            formSection.classList.remove('hidden');
+            resultsSection.classList.remove('show');
+            document.getElementById('savings-form').reset();
+            document.getElementById('dcaTotal').textContent = 'Aportación Anual Estimada: €0';
+        });
+
+        // Update DCA total
+        document.getElementById('dcaAmount').addEventListener('input', () => {
+            const dcaAmount = parseFloat(document.getElementById('dcaAmount').value) || 0;
+            const dcaFrequency = document.getElementById('dcaFrequency').value;
+            let multiplier = dcaFrequency === 'monthly' ? 12 : dcaFrequency === 'quarterly' ? 4 : 1;
+            document.getElementById('dcaTotal').textContent = `Aportación Anual Estimada: €${(dcaAmount * multiplier).toFixed(2)}`;
+        });
+
+        document.getElementById('dcaFrequency').addEventListener('change', () => {
+            const dcaAmount = parseFloat(document.getElementById('dcaAmount').value) || 0;
+            const dcaFrequency = document.getElementById('dcaFrequency').value;
+            let multiplier = dcaFrequency === 'monthly' ? 12 : dcaFrequency === 'quarterly' ? 4 : 1;
+            document.getElementById('dcaTotal').textContent = `Aportación Anual Estimada: €${(dcaAmount * multiplier).toFixed(2)}`;
+        });
+    </script>
+</body>
+</html>
