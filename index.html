@@ -1,907 +1,1676 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optimizador de Ahorros Avanzado</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Optimización del Patrimonio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
-            min-height: 100vh;
+        * {
             margin: 0;
-            padding: 2rem;
-            color: #333;
+            padding: 0;
+            box-sizing: border-box;
         }
 
+```
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #333;
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 40px;
+        color: white;
+    }
+
+    .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .input-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .input-field {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .input-field label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #555;
+    }
+
+    .input-field input, .input-field select {
+        padding: 12px 15px;
+        border: 2px solid #e1e5e9;
+        border-radius: 10px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .input-field input:focus, .input-field select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .asset-input {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 10px;
+        align-items: end;
+    }
+
+    .asset-input input[type="number"] {
+        margin: 0;
+    }
+
+    .yield-input {
+        position: relative;
+    }
+
+    .yield-input input {
+        padding-right: 25px;
+    }
+
+    .yield-input::after {
+        content: '%';
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+        pointer-events: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        color: #333;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 15px rgba(252, 182, 159, 0.3);
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+        background: white;
+        margin: 5% auto;
+        padding: 30px;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .close {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+    .close:hover {
+        color: #667eea;
+    }
+
+    .dca-distribution {
+        display: grid;
+        gap: 15px;
+    }
+
+    .dca-item {
+        display: grid;
+        grid-template-columns: 2fr 1fr auto;
+        gap: 10px;
+        align-items: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+    }
+
+    .dca-item input {
+        margin: 0;
+    }
+
+    .results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 30px;
+    }
+
+    .score-card {
+        text-align: center;
+        padding: 40px 20px;
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .score-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .score-number {
+        font-size: 4rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .score-text {
+        font-size: 1.2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 400px;
+        margin: 30px 0;
+    }
+
+    .allocation-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin: 30px 0;
+    }
+
+    .allocation-item {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .allocation-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(240, 147, 251, 0.3);
+    }
+
+    .allocation-item h4 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+
+    .allocation-item .amount {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .allocation-item .percentage {
+        opacity: 0.8;
+        font-size: 0.9rem;
+    }
+
+    .allocation-item .yield {
+        opacity: 0.9;
+        font-size: 0.8rem;
+        margin-top: 5px;
+    }
+
+    .recommendation {
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        padding: 25px;
+        border-radius: 15px;
+        border-left: 5px solid #ff6b6b;
+        margin: 20px 0;
+    }
+
+    .recommendation h4 {
+        color: #333;
+        margin-bottom: 15px;
+        font-size: 1.3rem;
+    }
+
+    .recommendation ul {
+        color: #555;
+        padding-left: 20px;
+    }
+
+    .recommendation li {
+        margin: 8px 0;
+        line-height: 1.6;
+    }
+
+    .emergency-fund-status {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 15px;
+        margin: 20px 0;
+        border-left: 5px solid #28a745;
+    }
+
+    .emergency-fund-status.warning {
+        border-left-color: #ffc107;
+        background: #fff3cd;
+    }
+
+    .emergency-fund-status.danger {
+        border-left-color: #dc3545;
+        background: #f8d7da;
+    }
+
+    .total-indicator {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 10px;
+        font-weight: bold;
+        z-index: 999;
+        transition: all 0.3s ease;
+    }
+
+    .dca-indicator {
+        margin-top: 10px;
+        padding: 10px;
+        background: #e3f2fd;
+        border-radius: 8px;
+        border-left: 4px solid #2196f3;
+    }
+
+    @media (max-width: 768px) {
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            animation: fadeIn 0.5s ease;
+            padding: 15px;
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        h1, h2, h3 {
-            color: #1e3a8a;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            text-align: center;
-            padding: 2rem;
-            background: linear-gradient(to right, #3b82f6, #6366f1);
-            color: white;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-        }
-
-        .form-section, .results-section {
-            padding: 2rem;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-
-        input:focus, select:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #4b5563;
-        }
-
-        button {
-            background: #3b82f6;
-            color: white;
-            padding: 1rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.3s;
-        }
-
-        button:hover {
-            background: #2563eb;
-        }
-
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        .metric-card {
-            text-align: center;
-        }
-
-        .metric-value {
+        
+        .header h1 {
             font-size: 2rem;
-            font-weight: bold;
-            color: #1e40af;
+        }
+        
+        .input-group {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .results-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .allocation-grid {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .score-number {
+            font-size: 3rem;
         }
 
-        .suggestion-card {
-            border-left: 4px solid #3b82f6;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            background: #f9fafb;
-            border-radius: 8px;
+        .asset-input {
+            grid-template-columns: 1fr;
+            gap: 5px;
         }
 
-        .chart-container {
-            height: 300px;
+        .modal-content {
+            width: 95%;
+            margin: 10% auto;
+            padding: 20px;
         }
 
-        .hidden {
-            display: none;
+        .dca-item {
+            grid-template-columns: 1fr;
+            gap: 10px;
         }
+    }
 
-        .priority-high {
-            border-color: #ef4444 !important;
-            background: #fee2e2 !important;
-        }
+    .hidden {
+        display: none;
+    }
 
-        .priority-medium {
-            border-color: #eab308 !important;
-            background: #fef9c3 !important;
-        }
-    </style>
+    .fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+```
+
 </head>
 <body>
     <div class="container">
-        <h1><span>🔍</span> Optimizador de Ahorros Avanzado</h1>
-        
-        <div id="form-section" class="form-section">
-            <div class="grid">
-                <!-- Información Personal -->
-                <div>
-                    <h2>Información Personal</h2>
-                    <div>
-                        <label>Total de Ahorros (€)</label>
-                        <input type="number" id="totalSavings" placeholder="50000">
-                    </div>
-                    <div>
-                        <label>Edad</label>
-                        <input type="number" id="age" placeholder="35">
-                    </div>
-                    <div>
-                        <label>Tolerancia al Riesgo</label>
-                        <select id="riskTolerance">
-                            <option value="conservative">Conservador</option>
-                            <option value="medium" selected>Moderado</option>
-                            <option value="aggressive">Agresivo</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Horizonte Temporal</label>
-                        <select id="timeHorizon">
-                            <option value="1-3">1-3 años</option>
-                            <option value="3-5">3-5 años</option>
-                            <option value="5-10" selected>5-10 años</option>
-                            <option value="10-20">10-20 años</option>
-                            <option value="20+">Más de 20 años</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Inflación Actual (%)</label>
-                        <input type="number" step="0.1" id="currentInflation" value="3.5">
-                    </div>
-                    <div>
-                        <label>Aportación Mensual Total (€)</label>
-                        <input type="number" id="monthlyContribution" placeholder="500">
-                    </div>
-                    <div>
-                        <label>Gastos Mensuales (€) - Para Fondo de Emergencia</label>
-                        <input type="number" id="monthlyExpenses" placeholder="2000">
-                    </div>
-                </div>
-
-                <!-- Distribución Actual -->
-                <div>
-                    <h2>Distribución Actual de Ahorros</h2>
-                    <div>
-                        <label>Cuenta Corriente (€)</label>
-                        <input type="number" id="cashAccount" placeholder="0">
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="flex-1">
-                            <label>Cuenta Remunerada (€)</label>
-                            <input type="number" id="savingsAccount" placeholder="0">
-                        </div>
-                        <div class="w-24">
-                            <label>%</label>
-                            <input type="number" step="0.1" id="savingsRate" value="0.5">
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="flex-1">
-                            <label>Fondo Monetario (€)</label>
-                            <input type="number" id="moneyMarket" placeholder="0">
-                        </div>
-                        <div class="w-24">
-                            <label>%</label>
-                            <input type="number" step="0.1" id="moneyMarketRate" value="4.5">
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="flex-1">
-                            <label>Renta Fija/Bonos (€)</label>
-                            <input type="number" id="bonds" placeholder="0">
-                        </div>
-                        <div class="w-24">
-                            <label>%</label>
-                            <input type="number" step="0.1" id="bondsRate" value="3.5">
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="flex-1">
-                            <label>Fondos Indexados (€)</label>
-                            <input type="number" id="indexFunds" placeholder="0">
-                        </div>
-                        <div class="w-24">
-                            <label>%</label>
-                            <input type="number" step="0.1" id="indexFundsRate" value="8">
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="flex-1">
-                            <label>Renta Variable/Acciones (€)</label>
-                            <input type="number" id="stocks" placeholder="0">
-                        </div>
-                        <div class="w-24">
-                            <label>%</label>
-                            <input type="number" step="0.1" id="stocksRate" value="10">
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="flex-1">
-                            <label>REITs/Inmobiliario (€)</label>
-                            <input type="number" id="realEstate" placeholder="0">
-                        </div>
-                        <div class="w-24">
-                            <label>%</label>
-                            <input type="number" step="0.1" id="realEstateRate" value="6">
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="flex-1">
-                            <label>Criptomonedas (€)</label>
-                            <input type="number" id="crypto" placeholder="0">
-                        </div>
-                        <div class="w-24">
-                            <label>%</label>
-                            <input type="number" step="0.1" id="cryptoRate" value="15">
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="flex-1">
-                            <label>Materias Primas (€)</label>
-                            <input type="number" id="commodities" placeholder="0">
-                        </div>
-                        <div class="w-24">
-                            <label>%</label>
-                            <input type="number" step="0.1" id="commoditiesRate" value="5">
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="flex-1">
-                            <label>Otras Inversiones (€)</label>
-                            <input type="number" id="other" placeholder="0">
-                        </div>
-                        <div class="w-24">
-                            <label>%</label>
-                            <input type="number" step="0.1" id="otherRate" value="5">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- DCA Section -->
-            <div id="dca-section" class="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200 hidden">
-                <h3>Distribución DCA Mensual</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label>A Cuenta Corriente</label>
-                        <input type="number" id="dcaCashAccount" placeholder="0">
-                    </div>
-                    <div>
-                        <label>A Cuenta Remunerada</label>
-                        <input type="number" id="dcaSavingsAccount" placeholder="0">
-                    </div>
-                    <div>
-                        <label>A Fondo Monetario</label>
-                        <input type="number" id="dcaMoneyMarket" placeholder="0">
-                    </div>
-                    <div>
-                        <label>A Renta Fija</label>
-                        <input type="number" id="dcaBonds" placeholder="0">
-                    </div>
-                    <div>
-                        <label>A Fondos Indexados</label>
-                        <input type="number" id="dcaIndexFunds" placeholder="0">
-                    </div>
-                    <div>
-                        <label>A Renta Variable</label>
-                        <input type="number" id="dcaStocks" placeholder="0">
-                    </div>
-                    <div>
-                        <label>A REITs</label>
-                        <input type="number" id="dcaRealEstate" placeholder="0">
-                    </div>
-                    <div>
-                        <label>A Criptomonedas</label>
-                        <input type="number" id="dcaCrypto" placeholder="0">
-                    </div>
-                    <div>
-                        <label>A Materias Primas</label>
-                        <input type="number" id="dcaCommodities" placeholder="0">
-                    </div>
-                    <div>
-                        <label>A Otros</label>
-                        <input type="number" id="dcaOther" placeholder="0">
-                    </div>
-                </div>
-                <p id="total-dca" class="mt-2 text-sm text-blue-600"></p>
-            </div>
-
-            <button onclick="calculateAnalysis()" class="w-full mt-6">Analizar Optimización</button>
+        <div class="header">
+            <h1>💰 Optimización del Patrimonio</h1>
+            <p>Analiza y optimiza tu gestión de efectivo e inversiones</p>
         </div>
 
-        <div id="results-section" class="results-section hidden">
-            <div id="score-card" class="card metric-card"></div>
-            <div class="grid">
-                <div class="card metric-card" id="current-return"></div>
-                <div class="card metric-card" id="potential-return"></div>
-                <div class="card metric-card" id="potential-diff"></div>
-                <div class="card metric-card" id="with-dca"></div>
-            </div>
-            <div class="grid">
-                <div class="card">
-                    <h3>Distribución Actual</h3>
-                    <div class="chart-container"><canvas id="pie-chart"></canvas></div>
+```
+    <div class="card">
+        <h2>📊 Datos Financieros</h2>
+        <form id="patrimonioForm">
+            <div class="input-group">
+                <div class="input-field">
+                    <label for="gastosMensuales">Gastos Mensuales (€)</label>
+                    <input type="number" id="gastosMensuales" min="0" step="50" placeholder="2500">
                 </div>
-                <div class="card">
-                    <h3>Proyección Futura</h3>
-                    <div id="projections-list"></div>
+                <div class="input-field">
+                    <label for="perfilRiesgo">Perfil de Riesgo</label>
+                    <select id="perfilRiesgo">
+                        <option value="conservador">Conservador (6-12 meses)</option>
+                        <option value="agresivo">Agresivo (3-6 meses)</option>
+                    </select>
+                </div>
+                <div class="input-field">
+                    <label for="dcaAmount">DCA Mensual Total (€)</label>
+                    <input type="number" id="dcaAmount" min="0" step="50" placeholder="500">
+                    <button type="button" id="configureDCA" class="btn-secondary" style="margin-top: 10px;">
+                        📋 Configurar distribución DCA
+                    </button>
+                    <div id="dcaIndicator" class="dca-indicator hidden">
+                        <strong>DCA configurado:</strong> <span id="dcaConfiguredAmount">0€</span>
+                    </div>
                 </div>
             </div>
-            <div class="card" id="rebalance-plan"></div>
-            <div class="card" id="dca-recommended"></div>
-            <div class="card" id="creative-suggestions"></div>
-            <div class="card" id="recommended-distribution"></div>
-            <button onclick="resetForm()" class="w-full">Nuevo Análisis</button>
+
+            <h3>💼 Distribución Actual del Patrimonio</h3>
+            <div class="input-group">
+                <div class="input-field">
+                    <label>🏦 Cuenta Corriente (0% - Gastos diarios)</label>
+                    <div class="asset-input">
+                        <input type="number" id="cuentaCorriente" min="0" step="100" placeholder="5000">
+                        <div class="yield-input">
+                            <input type="number" id="yieldCuentaCorriente" value="0" step="0.1" readonly style="background: #f5f5f5;">
+                        </div>
+                    </div>
+                </div>
+                <div class="input-field">
+                    <label>💳 Cuenta Remunerada</label>
+                    <div class="asset-input">
+                        <input type="number" id="cuentaRemunerada" min="0" step="100" placeholder="10000">
+                        <div class="yield-input">
+                            <input type="number" id="yieldCuentaRemunerada" value="3.5" step="0.1" min="0" max="10">
+                        </div>
+                    </div>
+                </div>
+                <div class="input-field">
+                    <label>🏛️ Renta Fija</label>
+                    <div class="asset-input">
+                        <input type="number" id="rentaFija" min="0" step="100" placeholder="15000">
+                        <div class="yield-input">
+                            <input type="number" id="yieldRentaFija" value="4.0" step="0.1" min="0" max="15">
+                        </div>
+                    </div>
+                </div>
+                <div class="input-field">
+                    <label>📈 Renta Variable</label>
+                    <div class="asset-input">
+                        <input type="number" id="rentaVariable" min="0" step="100" placeholder="20000">
+                        <div class="yield-input">
+                            <input type="number" id="yieldRentaVariable" value="8.0" step="0.1" min="0" max="20">
+                        </div>
+                    </div>
+                </div>
+                <div class="input-field">
+                    <label>🏠 Inmobiliario</label>
+                    <div class="asset-input">
+                        <input type="number" id="inmobiliario" min="0" step="100" placeholder="8000">
+                        <div class="yield-input">
+                            <input type="number" id="yieldInmobiliario" value="6.0" step="0.1" min="0" max="15">
+                        </div>
+                    </div>
+                </div>
+                <div class="input-field">
+                    <label>₿ Criptomonedas</label>
+                    <div class="asset-input">
+                        <input type="number" id="criptomonedas" min="0" step="100" placeholder="2000">
+                        <div class="yield-input">
+                            <input type="number" id="yieldCriptomonedas" value="15.0" step="0.5" min="0" max="50">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="totalPatrimonioIndicator" class="total-indicator hidden">
+                💰 Patrimonio Total: 0€
+            </div>
+
+            <h3>🎯 Preferencia de Inversión</h3>
+            <div class="input-field">
+                <label for="preferenciaInversion">¿Dónde prefieres invertir?</label>
+                <select id="preferenciaInversion">
+                    <option value="renta-variable">Renta Variable (Acciones/Fondos indexados)</option>
+                    <option value="renta-fija">Renta Fija</option>
+                    <option value="inmobiliario">Inmobiliario</option>
+                    <option value="criptomonedas">Criptomonedas</option>
+                    <option value="diversificado">Portfolio diversificado</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-primary">🔍 Analizar Patrimonio</button>
+        </form>
+    </div>
+
+    <!-- Modal para configurar DCA -->
+    <div id="dcaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📋 Configurar Distribución DCA</h3>
+                <span class="close">&times;</span>
+            </div>
+            <p>Especifica cómo quieres distribuir tu DCA mensual entre los diferentes activos:</p>
+            <div id="dcaDistribution" class="dca-distribution">
+                <!-- Se llena dinámicamente -->
+            </div>
+            <div style="margin-top: 20px; padding: 15px; background: #f0f7ff; border-radius: 10px;">
+                <strong>Total DCA:</strong> <span id="totalDCAModal">0€</span> / <span id="targetDCAModal">0€</span>
+            </div>
+            <button type="button" id="saveDCA" class="btn-primary" style="margin-top: 20px;">
+                💾 Guardar configuración DCA
+            </button>
         </div>
     </div>
 
-    <script>
-        let analysis = null;
-        const COLORS = ['#3b82f6', '#6366f1', '#a855f7', '#ec4899', '#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#06b6d4'];
+    <div id="resultados" class="hidden">
+        <div class="results-grid">
+            <div class="card">
+                <div class="score-card">
+                    <div class="score-number" id="scoreNumber">0</div>
+                    <div class="score-text">Puntuación de Optimización</div>
+                </div>
+            </div>
 
-        function getFormData() {
+            <div class="card">
+                <h3>📈 Crecimiento Patrimonial</h3>
+                <div class="chart-container">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🏦 Fondo de Emergencia</h3>
+            <div id="emergencyFundStatus"></div>
+        </div>
+
+        <div class="card">
+            <h3>📊 Distribución del Patrimonio</h3>
+            <div class="allocation-grid" id="allocationGrid"></div>
+            <div class="chart-container">
+                <canvas id="allocationChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>💡 Recomendaciones Personalizadas</h3>
+            <div id="recommendations"></div>
+        </div>
+
+        <div class="card">
+            <h3>💰 Análisis DCA</h3>
+            <div id="dcaAnalysis"></div>
+        </div>
+
+        <div class="card">
+            <h3>🎯 Opinión sobre tu Preferencia de Inversión</h3>
+            <div id="investmentOpinion"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let growthChart = null;
+    let allocationChart = null;
+    let dcaDistribution = {};
+
+    // Event listeners principales
+    document.getElementById('patrimonioForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        analizarPatrimonio();
+    });
+
+    document.getElementById('configureDCA').addEventListener('click', abrirModalDCA);
+    document.getElementById('saveDCA').addEventListener('click', guardarConfiguracionDCA);
+    
+    // Modal eventos
+    const modal = document.getElementById('dcaModal');
+    const span = document.getElementsByClassName('close')[0];
+    
+    span.onclick = function() {
+        modal.style.display = 'none';
+    }
+    
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // Actualizar patrimonio total en tiempo real
+    const patrimonioInputs = ['cuentaCorriente', 'cuentaRemunerada', 'rentaFija', 'rentaVariable', 'inmobiliario', 'criptomonedas'];
+    
+    patrimonioInputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', actualizarPatrimonioTotal);
+    });
+
+    function actualizarPatrimonioTotal() {
+        let total = 0;
+        patrimonioInputs.forEach(id => {
+            const valor = parseFloat(document.getElementById(id).value) || 0;
+            total += valor;
+        });
+
+        const indicator = document.getElementById('totalPatrimonioIndicator');
+        indicator.classList.remove('hidden');
+        indicator.textContent = `💰 Patrimonio Total: ${total.toLocaleString()}€`;
+        
+        if (total > 0) {
+            indicator.style.background = 'rgba(40, 167, 69, 0.9)';
+        } else {
+            indicator.style.background = 'rgba(220, 53, 69, 0.9)';
+        }
+    }
+
+    function abrirModalDCA() {
+        const dcaTotal = parseFloat(document.getElementById('dcaAmount').value) || 0;
+        if (dcaTotal === 0) {
+            alert('Por favor, introduce primero el monto total de DCA mensual');
+            return;
+        }
+
+        // Inicializar distribución si está vacía
+        if (Object.keys(dcaDistribution).length === 0) {
+            dcaDistribution = {
+                cuentaRemunerada: 0,
+                rentaFija: 0,
+                rentaVariable: 0,
+                inmobiliario: 0,
+                criptomonedas: 0
+            };
+        }
+
+        const container = document.getElementById('dcaDistribution');
+        const labels = {
+            cuentaRemunerada: '💳 Cuenta Remunerada',
+            rentaFija: '🏛️ Renta Fija',
+            rentaVariable: '📈 Renta Variable',
+            inmobiliario: '🏠 Inmobiliario',
+            criptomonedas: '₿ Criptomonedas'
+        };
+
+        container.innerHTML = '';
+        
+        for (let key in dcaDistribution) {
+            const div = document.createElement('div');
+            div.className = 'dca-item';
+            div.innerHTML = `
+                <label>${labels[key]}</label>
+                <input type="number" 
+                       id="dca_${key}" 
+                       value="${dcaDistribution[key]}" 
+                       min="0" 
+                       step="10" 
+                       placeholder="0">
+                <span style="color: #666;">€/mes</span>
+            `;
+            container.appendChild(div);
+            
+            // Event listener para actualizar total
+            document.getElementById(`dca_${key}`).addEventListener('input', actualizarTotalDCAModal);
+        }
+
+        document.getElementById('targetDCAModal').textContent = dcaTotal + '€';
+        actualizarTotalDCAModal();
+        modal.style.display = 'block';
+    }
+
+    function actualizarTotalDCAModal() {
+        let total = 0;
+        for (let key in dcaDistribution) {
+            const input = document.getElementById(`dca_${key}`);
+            if (input) {
+                const valor = parseFloat(input.value) || 0;
+                total += valor;
+            }
+        }
+        document.getElementById('totalDCAModal').textContent = total + '€';
+        
+        const targetDCA = parseFloat(document.getElementById('dcaAmount').value) || 0;
+        const totalElement = document.getElementById('totalDCAModal');
+        
+        if (Math.abs(total - targetDCA) < 1) {
+            totalElement.style.color = '#28a745';
+        } else {
+            totalElement.style.color = '#dc3545';
+        }
+    }
+
+    function guardarConfiguracionDCA() {
+        const targetDCA = parseFloat(document.getElementById('dcaAmount').value) || 0;
+        let total = 0;
+        
+        for (let key in dcaDistribution) {
+            const input = document.getElementById(`dca_${key}`);
+            if (input) {
+                dcaDistribution[key] = parseFloat(input.value) || 0;
+                total += dcaDistribution[key];
+            }
+        }
+        
+        if (Math.abs(total - targetDCA) > 1) {
+            alert(`El total de la distribución DCA (${total}€) no coincide con el monto total (${targetDCA}€)`);
+            return;
+        }
+        
+        // Mostrar indicador
+        const indicator = document.getElementById('dcaIndicator');
+        const amount = document.getElementById('dcaConfiguredAmount');
+        
+        indicator.classList.remove('hidden');
+        amount.textContent = total + '€';
+        
+        modal.style.display = 'none';
+        alert('Configuración DCA guardada correctamente');
+    }
+
+    function analizarPatrimonio() {
+        // Obtener datos del formulario
+        const gastosMensuales = parseFloat(document.getElementById('gastosMensuales').value) || 0;
+        const perfilRiesgo = document.getElementById('perfilRiesgo').value;
+        const dcaAmount = parseFloat(document.getElementById('dcaAmount').value) || 0;
+        
+        // Distribución actual en euros
+        const distribucion = {};
+        const yields = {};
+        let patrimonioTotal = 0;
+        
+        patrimonioInputs.forEach(id => {
+            const valor = parseFloat(document.getElementById(id).value) || 0;
+            const yield = parseFloat(document.getElementById('yield' + id.charAt(0).toUpperCase() + id.slice(1)).value) || 0;
+            
+            distribucion[id] = valor;
+            yields[id] = yield;
+            patrimonioTotal += valor;
+        });
+
+        if (patrimonioTotal === 0) {
+            alert('Por favor, introduce al menos algún valor en tu patrimonio');
+            return;
+        }
+
+        // Convertir a porcentajes para análisis
+        const distribucionPorcentaje = {};
+        for (let key in distribucion) {
+            distribucionPorcentaje[key] = (distribucion[key] / patrimonioTotal) * 100;
+        }
+
+        const preferencia = document.getElementById('preferenciaInversion').value;
+
+        // Calcular análisis
+        const analysis = calcularAnalisis(patrimonioTotal, gastosMensuales, perfilRiesgo, distribucion, distribucionPorcentaje, yields, dcaAmount, dcaDistribution, preferencia);
+        
+        // Mostrar resultados
+        mostrarResultados(analysis);
+    }
+
+    function calcularAnalisis(patrimonio, gastosMensuales, perfil, distribucion, distribucionPorcentaje, yields, dca, dcaDistr, preferencia) {
+        // Calcular fondo de emergencia necesario
+        const mesesEmergencia = perfil === 'conservador' ? 9 : 4.5;
+        const fondoEmergenciaNecesario = gastosMensuales * mesesEmergencia;
+        
+        // Calcular efectivo actual (cuenta corriente + remunerada)
+        const efectivoActual = distribucion.cuentaCorriente + distribucion.cuentaRemunerada;
+        
+        // Calcular rentabilidad ponderada
+        let rentabilidadPonderada = 0;
+        for (let key in distribucionPorcentaje) {
+            rentabilidadPonderada += (distribucionPorcentaje[key] * yields[key]) / 100;
+        }
+        rentabilidadPonderada = rentabilidadPonderada / 100; // Convertir a decimal
+
+        // Calcular puntuación
+        const score = calcularPuntuacion(patrimonio, gastosMensuales, perfil, distribucionPorcentaje, efectivoActual, fondoEmergenciaNecesario, yields);
+        
+        // Generar recomendaciones
+        const recommendations = generarRecomendaciones(patrimonio, gastosMensuales, perfil, distribucion, distribucionPorcentaje, efectivoActual, fondoEmergenciaNecesario, yields, preferencia);
+        
+        // Análisis DCA
+        const dcaAnalysis = analizarDCA(dca, dcaDistr, patrimonio, preferencia, yields);
+        
+        // Opinión sobre preferencia
+        const investmentOpinion = generarOpinionInversion(preferencia, distribucionPorcentaje, yields);
+
+        return {
+            patrimonio,
+            gastosMensuales,
+            perfil,
+            distribucion,
+            distribucionPorcentaje,
+            yields,
+            fondoEmergenciaNecesario,
+            efectivoActual,
+            score,
+            recommendations,
+            dcaAnalysis,
+            investmentOpinion,
+            dca,
+            dcaDistribution: dcaDistr,
+            preferencia,
+            rentabilidadPonderada
+        };
+    }
+
+    function calcularPuntuacion(patrimonio, gastosMensuales, perfil, distribucionPorcentaje, efectivoActual, fondoEmergenciaNecesario, yields) {
+        let score = 0;
+
+        // Fondo de emergencia (30 puntos)
+        if (efectivoActual >= fondoEmergenciaNecesario) {
+            score += 30;
+        } else if (efectivoActual >= fondoEmergenciaNecesario * 0.7) {
+            score += 20;
+        } else if (efectivoActual >= fondoEmergenciaNecesario * 0.5) {
+            score += 10;
+        }
+
+        // Diversificación (25 puntos)
+        const numInversiones = Object.values(distribucionPorcentaje).filter(val => val > 0).length;
+        if (numInversiones >= 5) score += 25;
+        else if (numInversiones >= 4) score += 20;
+        else if (numInversiones >= 3) score += 15;
+        else score += 5;
+
+        // Renta variable (20 puntos) - Importante para crecimiento
+        if (distribucionPorcentaje.rentaVariable >= 20 && distribucionPorcentaje.rentaVariable <= 60) {
+            score += 20;
+        } else if (distribucionPorcentaje.rentaVariable >= 10) {
+            score += 15;
+        } else {
+            score += 5;
+        }
+
+        // Renta fija (15 puntos) - Estabilidad
+        if (distribucionPorcentaje.rentaFija >= 15 && distribucionPorcentaje.rentaFija <= 40) {
+            score += 15;
+        } else if (distribucionPorcentaje.rentaFija >= 10) {
+            score += 10;
+        } else {
+            score += 5;
+        }
+
+        // Control de riesgo (10 puntos)
+        if (distribucionPorcentaje.criptomonedas <= 10) {
+            score += 10;
+        } else if (distribucionPorcentaje.criptomonedas <= 15) {
+            score += 5;
+        }
+
+        // Bonus por rentabilidades realistas
+        let rentabilidadRealista = true;
+        if (yields.cuentaRemunerada > 5 || yields.rentaFija > 6 || yields.rentaVariable > 12 || yields.criptomonedas > 25) {
+            rentabilidadRealista = false;
+        }
+        if (rentabilidadRealista) score += 5;
+
+        return Math.min(score, 100);
+    }
+
+    function generarRecomendaciones(patrimonio, gastosMensuales, perfil, distribucion, distribucionPorcentaje, efectivoActual, fondoEmergenciaNecesario, yields, preferencia) {
+        const recomendaciones = [];
+
+        // Fondo de emergencia
+        if (efectivoActual < fondoEmergenciaNecesario) {
+            const faltante = fondoEmergenciaNecesario - efectivoActual;
+            recomendaciones.push(`Aumenta tu fondo de emergencia en ${faltante.toLocaleString()}€. Tu fondo actual cubre solo ${Math.round((efectivoActual / gastosMensuales) * 10) / 10} meses.`);
+        }
+
+        // Diversificación
+        const numInversiones = Object.values(distribucionPorcentaje).filter(val => val > 0).length;
+        if (numInversiones < 4) {
+            recomendaciones.push('Considera diversificar más tu cartera incluyendo diferentes tipos de activos para reducir el riesgo.');
+        }
+
+        // Renta variable
+        if (distribucionPorcentaje.rentaVariable < 20) {
+            recomendaciones.push('Un mayor porcentaje en renta variable podría mejorar el crecimiento a largo plazo de tu patrimonio.');
+        } else if (distribucionPorcentaje.rentaVariable > 70) {
+            recomendaciones.push('Tu exposición a renta variable es muy alta. Considera reducirla para mayor estabilidad.');
+        }
+
+        // Criptomonedas
+        if (distribucionPorcentaje.criptomonedas > 10) {
+            recomendaciones.push('Tu exposición a criptomonedas es elevada. Se recomienda mantenerla por debajo del 5-10% del patrimonio total.');
+        }
+
+        // Efectivo excesivo
+        if (efectivoActual > fondoEmergenciaNecesario * 1.5) {
+            const exceso = efectivoActual - fondoEmergenciaNecesario;
+            recomendaciones.push(`Tienes ${exceso.toLocaleString()}€ en exceso en efectivo. Considera invertir este dinero para generar mayor rentabilidad.`);
+        }
+
+        // Rentabilidades poco realistas
+        if (yields.cuentaRemunerada > 5) {
+            recomendaciones.push(`La rentabilidad de tu cuenta remunerada (${yields.cuentaRemunerada}%) parece muy alta. Las cuentas remuneradas suelen dar entre 2-4%.`);
+        }
+        if (yields.rentaVariable > 12) {
+            recomendaciones.push(`La rentabilidad esperada de renta variable (${yields.rentaVariable}%) es muy optimista. Considera usar 7-10% para ser más conservador.`);
+        }
+
+        // Cuenta corriente con dinero insuficiente
+        if (distribucion.cuentaCorriente < gastosMensuales * 0.5) {
+            recomendaciones.push(`Tu cuenta corriente debería tener al menos medio mes de gastos (${(gastosMensuales * 0.5).toLocaleString()}€) para gastos diarios.`);
+        }
+
+        return recomendaciones;
+    }
+
+    function analizarDCA(dca, dcaDistr, patrimonio, preferencia, yields) {
+        if (dca === 0) {
             return {
-                totalSavings: document.getElementById('totalSavings').value,
-                age: document.getElementById('age').value,
-                riskTolerance: document.getElementById('riskTolerance').value,
-                timeHorizon: document.getElementById('timeHorizon').value,
-                currentInflation: document.getElementById('currentInflation').value,
-                monthlyContribution: document.getElementById('monthlyContribution').value,
-                monthlyExpenses: document.getElementById('monthlyExpenses').value,
-                cashAccount: document.getElementById('cashAccount').value,
-                savingsAccount: document.getElementById('savingsAccount').value,
-                savingsRate: document.getElementById('savingsRate').value,
-                moneyMarket: document.getElementById('moneyMarket').value,
-                moneyMarketRate: document.getElementById('moneyMarketRate').value,
-                bonds: document.getElementById('bonds').value,
-                bondsRate: document.getElementById('bondsRate').value,
-                indexFunds: document.getElementById('indexFunds').value,
-                indexFundsRate: document.getElementById('indexFundsRate').value,
-                stocks: document.getElementById('stocks').value,
-                stocksRate: document.getElementById('stocksRate').value,
-                realEstate: document.getElementById('realEstate').value,
-                realEstateRate: document.getElementById('realEstateRate').value,
-                crypto: document.getElementById('crypto').value,
-                cryptoRate: document.getElementById('cryptoRate').value,
-                commodities: document.getElementById('commodities').value,
-                commoditiesRate: document.getElementById('commoditiesRate').value,
-                other: document.getElementById('other').value,
-                otherRate: document.getElementById('otherRate').value,
-                dcaCashAccount: document.getElementById('dcaCashAccount').value,
-                dcaSavingsAccount: document.getElementById('dcaSavingsAccount').value,
-                dcaMoneyMarket: document.getElementById('dcaMoneyMarket').value,
-                dcaBonds: document.getElementById('dcaBonds').value,
-                dcaIndexFunds: document.getElementById('dcaIndexFunds').value,
-                dcaStocks: document.getElementById('dcaStocks').value,
-                dcaRealEstate: document.getElementById('dcaRealEstate').value,
-                dcaCrypto: document.getElementById('dcaCrypto').value,
-                dcaCommodities: document.getElementById('dcaCommodities').value,
-                dcaOther: document.getElementById('dcaOther').value,
-                includeRealEstate: true, // Fixed preferences for simplicity
-                includeCrypto: false,
-                includeCommodities: true,
-                includeInternational: true,
-                includeTechStocks: true,
-                sustainableInvesting: false
+                mensaje: 'No tienes configurado un plan de DCA (Dollar Cost Averaging). Te recomendamos establecer una inversión mensual automática.',
+                recomendacion: 'Un DCA del 10-20% de tus ingresos netos puede ser un buen punto de partida.',
+                distribucion: null
             };
         }
 
-        function calculateAnalysis() {
-            const formData = getFormData();
-            const total = parseFloat(formData.totalSavings) || 0;
-            if (total === 0) return;
-
-            const inflation = parseFloat(formData.currentInflation) || 3.5;
-            const monthlyContribution = parseFloat(formData.monthlyContribution) || 0;
-            const monthlyExpenses = parseFloat(formData.monthlyExpenses) || 0;
-
-            const distribution = {
-                cashAccount: parseFloat(formData.cashAccount) || 0,
-                savingsAccount: parseFloat(formData.savingsAccount) || 0,
-                moneyMarket: parseFloat(formData.moneyMarket) || 0,
-                bonds: parseFloat(formData.bonds) || 0,
-                indexFunds: parseFloat(formData.indexFunds) || 0,
-                stocks: parseFloat(formData.stocks) || 0,
-                realEstate: parseFloat(formData.realEstate) || 0,
-                crypto: parseFloat(formData.crypto) || 0,
-                commodities: parseFloat(formData.commodities) || 0,
-                other: parseFloat(formData.other) || 0
+        const porcentajePatrimonio = (dca * 12 / patrimonio) * 100;
+        
+        let distribucionTexto = '';
+        let rentabilidadDCA = 0;
+        
+        if (Object.keys(dcaDistr).length > 0 && Object.values(dcaDistr).some(val => val > 0)) {
+            distribucionTexto = '<h5>📋 Tu distribución DCA:</h5><ul>';
+            const labels = {
+                cuentaRemunerada: 'Cuenta Remunerada',
+                rentaFija: 'Renta Fija',
+                rentaVariable: 'Renta Variable',
+                inmobiliario: 'Inmobiliario',
+                criptomonedas: 'Criptomonedas'
             };
-
-            const dcaDistribution = {
-                cashAccount: parseFloat(formData.dcaCashAccount) || 0,
-                savingsAccount: parseFloat(formData.dcaSavingsAccount) || 0,
-                moneyMarket: parseFloat(formData.dcaMoneyMarket) || 0,
-                bonds: parseFloat(formData.dcaBonds) || 0,
-                indexFunds: parseFloat(formData.dcaIndexFunds) || 0,
-                stocks: parseFloat(formData.dcaStocks) || 0,
-                realEstate: parseFloat(formData.dcaRealEstate) || 0,
-                crypto: parseFloat(formData.dcaCrypto) || 0,
-                commodities: parseFloat(formData.dcaCommodities) || 0,
-                other: parseFloat(formData.dcaOther) || 0
-            };
-
-            const totalAllocated = Object.values(distribution).reduce((sum, val) => sum + val, 0);
-            const totalDCA = Object.values(dcaDistribution).reduce((sum, val) => sum + val, 0);
-
-            const weightedReturn = (
-                (distribution.cashAccount * 0) +
-                (distribution.savingsAccount * parseFloat(formData.savingsRate)) +
-                (distribution.moneyMarket * parseFloat(formData.moneyMarketRate)) +
-                (distribution.bonds * parseFloat(formData.bondsRate)) +
-                (distribution.indexFunds * parseFloat(formData.indexFundsRate)) +
-                (distribution.stocks * parseFloat(formData.stocksRate)) +
-                (distribution.realEstate * parseFloat(formData.realEstateRate)) +
-                (distribution.crypto * parseFloat(formData.cryptoRate)) +
-                (distribution.commodities * parseFloat(formData.commoditiesRate)) +
-                (distribution.other * parseFloat(formData.otherRate))
-            ) / totalAllocated;
-
-            // Fondo de Emergencia
-            let monthsFactor;
-            if (formData.riskTolerance === 'conservative') monthsFactor = 9;
-            else if (formData.riskTolerance === 'medium') monthsFactor = 6;
-            else monthsFactor = 4;
-            const requiredEmergency = monthlyExpenses * monthsFactor;
-            const currentLiquid = distribution.cashAccount + distribution.savingsAccount + distribution.moneyMarket;
-
-            const getRecommendedAllocation = () => {
-                const age = parseInt(formData.age) || 30;
-                const riskTolerance = formData.riskTolerance;
-                let recommendations = {};
-
-                if (riskTolerance === 'conservative') {
-                    recommendations = {
-                        cashAccount: Math.max(3, Math.min(15, 120 - age)),
-                        savingsAccount: 15,
-                        moneyMarket: 20,
-                        bonds: 40,
-                        indexFunds: 15,
-                        stocks: 5,
-                        realEstate: 0,
-                        crypto: 0,
-                        commodities: 0,
-                        other: 0
-                    };
-                } else if (riskTolerance === 'aggressive') {
-                    recommendations = {
-                        cashAccount: 5,
-                        savingsAccount: 5,
-                        moneyMarket: 5,
-                        bonds: 10,
-                        indexFunds: 40,
-                        stocks: 25,
-                        realEstate: formData.includeRealEstate ? 5 : 0,
-                        crypto: formData.includeCrypto ? 3 : 0,
-                        commodities: formData.includeCommodities ? 2 : 0,
-                        other: 0
-                    };
-                } else {
-                    recommendations = {
-                        cashAccount: Math.max(5, Math.min(10, 110 - age)),
-                        savingsAccount: 10,
-                        moneyMarket: 10,
-                        bonds: 25,
-                        indexFunds: 35,
-                        stocks: 10,
-                        realEstate: formData.includeRealEstate ? 3 : 0,
-                        crypto: formData.includeCrypto ? 1 : 0,
-                        commodities: formData.includeCommodities ? 1 : 0,
-                        other: 0
-                    };
+            
+            for (let key in dcaDistr) {
+                if (dcaDistr[key] > 0) {
+                    const porcentajeDCA = (dcaDistr[key] / dca) * 100;
+                    const yieldKey = 'yield' + key.charAt(0).toUpperCase() + key.slice(1);
+                    const yieldValue = yields[key] || 0;
+                    rentabilidadDCA += (porcentajeDCA * yieldValue) / 100;
+                    
+                    distribucionTexto += `<li>${labels[key]}: ${dcaDistr[key]}€/mes (${porcentajeDCA.toFixed(1)}%) - ${yieldValue}% rentabilidad</li>`;
                 }
-
-                // Ajustar por exclusiones
-                const excludedTotal = 
-                    (!formData.includeRealEstate ? recommendations.realEstate : 0) +
-                    (!formData.includeCrypto ? recommendations.crypto : 0) +
-                    (!formData.includeCommodities ? recommendations.commodities : 0);
-                if (excludedTotal > 0) {
-                    recommendations.indexFunds += excludedTotal * 0.7;
-                    recommendations.bonds += excludedTotal * 0.3;
-                    if (!formData.includeRealEstate) recommendations.realEstate = 0;
-                    if (!formData.includeCrypto) recommendations.crypto = 0;
-                    if (!formData.includeCommodities) recommendations.commodities = 0;
-                }
-
-                // Ajustar por Fondo de Emergencia
-                const requiredLiquidPercent = Math.min(100, (requiredEmergency / totalAllocated) * 100);
-                let currentRecLiquid = recommendations.cashAccount + recommendations.savingsAccount + recommendations.moneyMarket;
-                if (requiredLiquidPercent > currentRecLiquid) {
-                    const diff = requiredLiquidPercent - currentRecLiquid;
-                    recommendations.moneyMarket += diff;
-                    if (riskTolerance === 'aggressive') {
-                        recommendations.stocks = Math.max(0, recommendations.stocks - diff);
-                    } else {
-                        recommendations.bonds = Math.max(0, recommendations.bonds - diff);
-                    }
-                }
-
-                return recommendations;
-            };
-
-            const recommended = getRecommendedAllocation();
-
-            const getRecommendedDCA = () => {
-                const riskTolerance = formData.riskTolerance;
-                let dcaRec = {};
-                let excludedTotal = 0;
-
-                if (riskTolerance === 'conservative') {
-                    dcaRec = {
-                        cashAccount: 0,
-                        savingsAccount: 20,
-                        moneyMarket: 30,
-                        bonds: 40,
-                        indexFunds: 10,
-                        stocks: 0,
-                        realEstate: 0,
-                        crypto: 0,
-                        commodities: 0,
-                        other: 0
-                    };
-                } else if (riskTolerance === 'aggressive') {
-                    dcaRec = {
-                        cashAccount: 0,
-                        savingsAccount: 5,
-                        moneyMarket: 5,
-                        bonds: 5,
-                        indexFunds: 50,
-                        stocks: 25,
-                        realEstate: formData.includeRealEstate ? 5 : 0,
-                        crypto: formData.includeCrypto ? 3 : 0,
-                        commodities: formData.includeCommodities ? 2 : 0,
-                        other: 0
-                    };
-                    excludedTotal = 
-                        (!formData.includeRealEstate ? 5 : 0) +
-                        (!formData.includeCrypto ? 3 : 0) +
-                        (!formData.includeCommodities ? 2 : 0);
-                    if (excludedTotal > 0) {
-                        dcaRec.indexFunds += excludedTotal * 0.8;
-                        dcaRec.stocks += excludedTotal * 0.2;
-                    }
-                } else {
-                    dcaRec = {
-                        cashAccount: 0,
-                        savingsAccount: 10,
-                        moneyMarket: 10,
-                        bonds: 15,
-                        indexFunds: 50,
-                        stocks: 10,
-                        realEstate: formData.includeRealEstate ? 3 : 0,
-                        crypto: formData.includeCrypto ? 1 : 0,
-                        commodities: formData.includeCommodities ? 1 : 0,
-                        other: 0
-                    };
-                    excludedTotal = 
-                        (!formData.includeRealEstate ? 3 : 0) +
-                        (!formData.includeCrypto ? 1 : 0) +
-                        (!formData.includeCommodities ? 1 : 0);
-                    if (excludedTotal > 0) {
-                        dcaRec.indexFunds += excludedTotal * 0.7;
-                        dcaRec.bonds += excludedTotal * 0.3;
-                    }
-                }
-                return dcaRec;
-            };
-
-            const recommendedDCA = getRecommendedDCA();
-
-            const potentialReturn = (
-                (recommended.cashAccount * 0) +
-                (recommended.savingsAccount * parseFloat(formData.savingsRate)) +
-                (recommended.moneyMarket * parseFloat(formData.moneyMarketRate)) +
-                (recommended.bonds * parseFloat(formData.bondsRate)) +
-                (recommended.indexFunds * parseFloat(formData.indexFundsRate)) +
-                (recommended.stocks * parseFloat(formData.stocksRate)) +
-                (recommended.realEstate * parseFloat(formData.realEstateRate)) +
-                (recommended.crypto * parseFloat(formData.cryptoRate)) +
-                (recommended.commodities * parseFloat(formData.commoditiesRate)) +
-                (recommended.other * parseFloat(formData.otherRate))
-            ) / 100;
-
-            const calculateScore = () => {
-                let score = 100;
-                const cashPercent = (distribution.cashAccount / totalAllocated) * 100;
-                if (cashPercent > 20) score -= (cashPercent - 20) * 2;
-
-                const nonZeroAssets = Object.values(distribution).filter(val => val > 0).length;
-                if (nonZeroAssets < 3) score -= 20;
-
-                const realReturn = weightedReturn - inflation;
-                if (realReturn > 0) score += Math.min(20, realReturn * 3);
-                else score -= Math.abs(realReturn) * 5;
-
-                if (formData.riskTolerance === 'conservative' && weightedReturn > 6) score -= 10;
-                if (formData.riskTolerance === 'aggressive' && weightedReturn < 7) score -= 15;
-
-                if (monthlyContribution > 0) score += 10;
-                if (totalDCA === monthlyContribution) score += 5;
-
-                // Penalizar fondo de emergencia insuficiente
-                if (currentLiquid < requiredEmergency) score -= 20 * (1 - currentLiquid / requiredEmergency);
-
-                return Math.max(0, Math.min(100, score));
-            };
-
-            const optimizationScore = calculateScore();
-
-            const projectionYears = parseInt(formData.timeHorizon.split('-')[1]) || 10;
-            const currentProjection = total * Math.pow(1 + weightedReturn/100, projectionYears);
-            const optimizedProjection = total * Math.pow(1 + potentialReturn/100, projectionYears);
-            const inflationAdjustedCurrent = total * Math.pow(1 + inflation/100, projectionYears);
-            const dcaProjection = monthlyContribution > 0 ? 
-                monthlyContribution * 12 * (Math.pow(1 + potentialReturn/100, projectionYears) - 1) / (potentialReturn/100) : 0;
-
-            const generateRebalanceRecommendations = () => {
-                const recommendations = [];
-                Object.keys(distribution).forEach(asset => {
-                    const current = (distribution[asset] / totalAllocated) * 100;
-                    const target = recommended[asset];
-                    const difference = current - target;
-                    if (Math.abs(difference) > 2) {
-                        recommendations.push({
-                            type: difference > 0 ? 'reduce' : 'increase',
-                            asset: getAssetName(asset),
-                            current: current.toFixed(1),
-                            target: target.toFixed(1),
-                            amount: formatCurrency(Math.abs(difference / 100) * totalAllocated),
-                            priority: Math.abs(difference) > 10 ? 'high' : 'medium'
-                        });
-                    }
-                });
-                return recommendations.sort((a, b) => (b.priority === 'high' ? 1 : 0) - (a.priority === 'high' ? 1 : 0));
-            };
-
-            const generateCreativeSuggestions = () => {
-                const suggestions = [];
-                const age = parseInt(formData.age) || 30;
-                const riskTolerance = formData.riskTolerance;
-
-                // Fondo de Emergencia siempre
-                if (monthlyExpenses > 0 && currentLiquid < requiredEmergency) {
-                    suggestions.push({
-                        icon: '🆘',
-                        title: 'Fondo de Emergencia Insuficiente',
-                        description: `Necesitas al menos ${monthsFactor} meses de gastos (${formatCurrency(requiredEmergency)}) en activos líquidos (cuenta corriente, remunerada o fondo monetario) con al menos 2% de rendimiento.`,
-                        action: `Aumenta liquidez en ${formatCurrency(requiredEmergency - currentLiquid)}`,
-                        category: 'seguridad'
-                    });
-                } else if (monthlyExpenses === 0) {
-                    suggestions.push({
-                        icon: '⚠️',
-                        title: 'Ingresa Gastos Mensuales',
-                        description: 'Para calcular tu fondo de emergencia, ingresa tus gastos mensuales promedio.',
-                        action: 'Actualiza el formulario',
-                        category: 'urgente'
-                    });
-                }
-
-                // Otras sugerencias (similar al original, abreviado por espacio)
-                if (age < 35 && riskTolerance !== 'conservative') {
-                    suggestions.push({
-                        icon: '🚀',
-                        title: 'Aprovecha tu juventud',
-                        description: 'Tienes tiempo para asumir más riesgo.',
-                        action: 'Sube indexados al 40-50%',
-                        category: 'riesgo'
-                    });
-                }
-                // Agregar más si es necesario...
-
-                return suggestions.slice(0, 8);
-            };
-
-            analysis = {
-                distribution,
-                dcaDistribution,
-                totalAllocated,
-                totalDCA,
-                monthlyContribution,
-                weightedReturn,
-                potentialReturn,
-                optimizationScore,
-                recommended,
-                recommendedDCA,
-                projections: {
-                    current: currentProjection,
-                    optimized: optimizedProjection,
-                    inflationAdjusted: inflationAdjustedCurrent,
-                    withDCA: optimizedProjection + dcaProjection,
-                    years: projectionYears
-                },
-                realReturn: weightedReturn - inflation,
-                potentialRealReturn: potentialReturn - inflation,
-                rebalanceRecommendations: generateRebalanceRecommendations(),
-                creativeSuggestions: generateCreativeSuggestions(),
-                requiredEmergency,
-                currentLiquid
-            };
-
-            showResults();
-        }
-
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
-        }
-
-        function formatPercentage(value) {
-            return `${value.toFixed(2)}%`;
-        }
-
-        function getAssetName(key) {
-            const names = {
-                cashAccount: 'Cuenta Corriente',
-                savingsAccount: 'Cuenta Remunerada',
-                moneyMarket: 'Fondo Monetario',
-                bonds: 'Renta Fija',
-                indexFunds: 'Fondos Indexados',
-                stocks: 'Renta Variable',
-                realEstate: 'Inmobiliario',
-                crypto: 'Criptomonedas',
-                commodities: 'Materias Primas',
-                other: 'Otros'
-            };
-            return names[key] || key;
-        }
-
-        function showResults() {
-            document.getElementById('form-section').classList.add('hidden');
-            document.getElementById('results-section').classList.remove('hidden');
-
-            // Score
-            document.getElementById('score-card').innerHTML = `
-                <h3>Puntuación de Optimización</h3>
-                <div class="metric-value">${analysis.optimizationScore.toFixed(0)} / 100</div>
-            `;
-
-            // Metrics
-            document.getElementById('current-return').innerHTML = `
-                <h3>Rendimiento Actual</h3>
-                <div class="metric-value">${formatPercentage(analysis.weightedReturn)}</div>
-                <p>Real: ${formatPercentage(analysis.realReturn)}</p>
-            `;
-            document.getElementById('potential-return').innerHTML = `
-                <h3>Potencial Optimizado</h3>
-                <div class="metric-value">${formatPercentage(analysis.potentialReturn)}</div>
-                <p>Real: ${formatPercentage(analysis.potentialRealReturn)}</p>
-            `;
-            document.getElementById('potential-diff').innerHTML = `
-                <h3>Diferencia Potencial</h3>
-                <div class="metric-value">${formatCurrency(analysis.projections.optimized - analysis.projections.current)}</div>
-                <p>En ${analysis.projections.years} años</p>
-            `;
-            document.getElementById('with-dca').innerHTML = `
-                <h3>Con DCA</h3>
-                <div class="metric-value">${formatCurrency(analysis.projections.withDCA)}</div>
-                <p>Total proyectado</p>
-            `;
-
-            // Pie Chart
-            const pieData = Object.entries(analysis.distribution).filter(([, v]) => v > 0).map(([k, v]) => ({
-                label: getAssetName(k),
-                value: v
-            }));
-            new Chart(document.getElementById('pie-chart'), {
-                type: 'pie',
-                data: {
-                    labels: pieData.map(d => d.label),
-                    datasets: [{ data: pieData.map(d => d.value), backgroundColor: COLORS }]
-                },
-                options: { responsive: true }
-            });
-
-            // Projections
-            const projectionsList = document.getElementById('projections-list');
-            projectionsList.innerHTML = `
-                <p>Actual: ${formatCurrency(analysis.projections.current)}</p>
-                <p>Optimizado: ${formatCurrency(analysis.projections.optimized)}</p>
-                <p>Con DCA: ${formatCurrency(analysis.projections.withDCA)}</p>
-                <p>Ajustado Inflación: ${formatCurrency(analysis.projections.inflationAdjusted)}</p>
-            `;
-
-            // Rebalance
-            const rebalancePlan = document.getElementById('rebalance-plan');
-            rebalancePlan.innerHTML = '<h3>Plan de Rebalanceado</h3>';
-            analysis.rebalanceRecommendations.forEach(rec => {
-                rebalancePlan.innerHTML += `
-                    <div class="suggestion-card priority-${rec.priority}">
-                        ${rec.type === 'reduce' ? 'Reducir' : 'Aumentar'} ${rec.asset}: ${rec.amount} (Actual: ${rec.current}% → Target: ${rec.target}%)
-                    </div>
-                `;
-            });
-
-            // DCA Recommended
-            const dcaRecommended = document.getElementById('dca-recommended');
-            if (analysis.monthlyContribution > 0) {
-                dcaRecommended.innerHTML = '<h3>DCA Recomendada</h3>';
-                Object.entries(analysis.recommendedDCA).filter(([, v]) => v > 0).forEach(([k, v]) => {
-                    dcaRecommended.innerHTML += `<p>${getAssetName(k)}: ${v}% (${formatCurrency((v / 100) * analysis.monthlyContribution)})</p>`;
-                });
-            } else {
-                dcaRecommended.classList.add('hidden');
             }
+            distribucionTexto += '</ul>';
+            rentabilidadDCA = rentabilidadDCA / 100; // Convertir a decimal
+        }
+        
+        return {
+            mensaje: `Tu DCA mensual de ${dca.toLocaleString()}€ representa un ${porcentajePatrimonio.toFixed(1)}% de crecimiento anual respecto a tu patrimonio actual.`,
+            proyeccion: calcularProyeccionDCA(patrimonio, dca, rentabilidadDCA > 0 ? rentabilidadDCA : 0.07),
+            recomendacion: porcentajePatrimonio < 5 ? 'Considera aumentar tu DCA para acelerar el crecimiento de tu patrimonio.' : 'Tu estrategia de DCA está bien dimensionada.',
+            distribucion: distribucionTexto,
+            rentabilidadEsperada: rentabilidadDCA > 0 ? `${(rentabilidadDCA * 100).toFixed(2)}%` : '7% (promedio estimado)'
+        };
+    }
 
-            // Creative Suggestions
-            const creativeSuggestions = document.getElementById('creative-suggestions');
-            creativeSuggestions.innerHTML = '<h3>Sugerencias Inteligentes</h3>';
-            analysis.creativeSuggestions.forEach(sug => {
-                creativeSuggestions.innerHTML += `
-                    <div class="suggestion-card">
-                        <span>${sug.icon}</span> <strong>${sug.title}</strong><br>
-                        ${sug.description}<br>
-                        Acción: ${sug.action}
-                    </div>
+    function calcularProyeccionDCA(patrimonioInicial, dcaMensual, rentabilidadAnual) {
+        const proyeccion = [];
+        let patrimonio = patrimonioInicial;
+        
+        for (let año = 0; año <= 10; año++) {
+            proyeccion.push({
+                año: año,
+                patrimonio: Math.round(patrimonio),
+                aportaciones: dcaMensual * 12 * año
+            });
+            
+            patrimonio = patrimonio * (1 + rentabilidadAnual) + (dcaMensual * 12);
+        }
+        
+        return proyeccion;
+    }
+
+    function generarOpinionInversion(preferencia, distribucionPorcentaje, yields) {
+        const opiniones = {
+            'renta-variable': {
+                titulo: '📈 Renta Variable - Excelente para el crecimiento',
+                opinion: 'Tu preferencia por la renta variable es muy acertada para el crecimiento a largo plazo. Los fondos indexados y acciones han demostrado ser una de las mejores formas de hacer crecer el patrimonio.',
+                pros: ['Mayor potencial de crecimiento', 'Protección contra la inflación', 'Liquidez alta', 'Diversificación fácil con ETFs'],
+                contras: ['Mayor volatilidad a corto plazo', 'Requiere horizonte temporal largo', 'Riesgo de pérdidas'],
+                recomendacion: `Tu asignación actual del ${distribucionPorcentaje.rentaVariable.toFixed(1)}% está ${distribucionPorcentaje.rentaVariable >= 30 ? 'bien dimensionada' : 'por debajo de lo óptimo para tu preferencia'}. Con una rentabilidad esperada del ${yields.rentaVariable}%, ${yields.rentaVariable > 10 ? 'considera ser más conservador (7-10%)' : 'parece realista'}.`
+            },
+            'renta-fija': {
+                titulo: '🏛️ Renta Fija - Estabilidad y predictibilidad',
+                opinion: 'La renta fija ofrece estabilidad y es una excelente base para cualquier cartera. Es especialmente valiosa en entornos de tipos altos.',
+                pros: ['Mayor estabilidad', 'Ingresos predecibles', 'Menor correlación con acciones', 'Preservación de capital'],
+                contras: ['Menor crecimiento a largo plazo', 'Riesgo de inflación', 'Riesgo de tipos de interés'],
+                recomendacion: `Tu asignación del ${distribucionPorcentaje.rentaFija.toFixed(1)}% es ${distribucionPorcentaje.rentaFija >= 20 ? 'apropiada' : 'algo baja'} para tu preferencia conservadora. La rentabilidad del ${yields.rentaFija}% ${yields.rentaFija > 5 ? 'parece algo alta para el entorno actual' : 'es realista'}.`
+            },
+            'inmobiliario': {
+                titulo: '🏠 Inmobiliario - Diversificación y rentas',
+                opinion: 'El inmobiliario es un excelente diversificador y generador de rentas. Los REITs pueden ser una forma eficiente de acceder a este mercado.',
+                pros: ['Diversificación vs acciones/bonos', 'Generación de rentas', 'Protección contra inflación', 'Activo tangible'],
+                contras: ['Menor liquidez', 'Concentración geográfica', 'Costes de transacción altos', 'Gestión requerida'],
+                recomendacion: `Tu ${distribucionPorcentaje.inmobiliario.toFixed(1)}% en inmobiliario ${distribucionPorcentaje.inmobiliario >= 10 ? 'está bien para diversificación' : 'podría aumentarse gradualmente'}. La rentabilidad esperada del ${yields.inmobiliario}% es ${yields.inmobiliario > 8 ? 'optimista' : 'razonable'}.`
+            },
+            'criptomonedas': {
+                titulo: '₿ Criptomonedas - Alto riesgo, alto potencial',
+                opinion: 'Las criptomonedas pueden ofrecer alto potencial de crecimiento, pero son muy volátiles. Se recomienda mantener una exposición limitada.',
+                pros: ['Alto potencial de crecimiento', 'Diversificación vs activos tradicionales', 'Liquidez 24/7', 'Innovación tecnológica'],
+                contras: ['Extrema volatilidad', 'Regulación incierta', 'Riesgo tecnológico', 'Mercado especulativo'],
+                recomendacion: `Tu ${distribucionPorcentaje.criptomonedas.toFixed(1)}% ${distribucionPorcentaje.criptomonedas <= 5 ? 'está dentro del rango recomendado' : 'es bastante alto para este activo tan volátil'}. La rentabilidad esperada del ${yields.criptomonedas}% refleja la volatilidad del sector.`
+            },
+            'diversificado': {
+                titulo: '🎯 Portfolio Diversificado - La estrategia equilibrada',
+                opinion: 'Un enfoque diversificado es la estrategia más prudente. Reduces riesgos manteniendo potencial de crecimiento.',
+                pros: ['Riesgo reducido', 'Estabilidad', 'Adaptabilidad', 'Menor necesidad de timing'],
+                contras: ['Crecimiento potencial limitado', 'Mayor complejidad', 'Costes de rebalanceo'],
+                recomendacion: 'Tu estrategia diversificada es sólida. Mantén el rebalanceo periódico para optimizar resultados.'
+            }
+        };
+
+        return opiniones[preferencia] || opiniones['diversificado'];
+    }
+
+    function mostrarResultados(analysis) {
+        // Mostrar sección de resultados
+        document.getElementById('resultados').classList.remove('hidden');
+        document.getElementById('resultados').classList.add('fade-in');
+
+        // Puntuación
+        document.getElementById('scoreNumber').textContent = analysis.score;
+        const scoreCard = document.querySelector('.score-card');
+        if (analysis.score >= 80) {
+            scoreCard.style.background = 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)';
+        } else if (analysis.score >= 60) {
+            scoreCard.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+        } else {
+            scoreCard.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%)';
+        }
+
+        // Estado del fondo de emergencia
+        mostrarEstadoFondoEmergencia(analysis);
+
+        // Distribución del patrimonio
+        mostrarDistribucionPatrimonio(analysis);
+
+        // Recomendaciones
+        mostrarRecomendaciones(analysis.recommendations);
+
+        // Análisis DCA
+        mostrarAnalisisDCA(analysis.dcaAnalysis);
+
+        // Opinión sobre inversión
+        mostrarOpinionInversion(analysis.investmentOpinion);
+
+        // Gráfico de crecimiento
+        mostrarGraficoCrecimiento(analysis);
+
+        // Scroll a resultados
+        document.getElementById('resultados').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function mostrarEstadoFondoEmergencia(analysis) {
+        const container = document.getElementById('emergencyFundStatus');
+        const coberturaMeses = analysis.efectivoActual / analysis.gastosMensuales;
+        
+        let statusClass = 'danger';
+        let statusIcon = '⚠️';
+        let statusText = 'Insuficiente';
+        
+        if (analysis.efectivoActual >= analysis.fondoEmergenciaNecesario) {
+            statusClass = '';
+            statusIcon = '✅';
+            statusText = 'Adecuado';
+        } else if (analysis.efectivoActual >= analysis.fondoEmergenciaNecesario * 0.7) {
+            statusClass = 'warning';
+            statusIcon = '⚡';
+            statusText = 'Mejorable';
+        }
+
+        container.innerHTML = `
+            <div class="emergency-fund-status ${statusClass}">
+                <div>
+                    <h4>${statusIcon} Fondo de Emergencia: ${statusText}</h4>
+                    <p><strong>Efectivo actual:</strong> ${analysis.efectivoActual.toLocaleString()}€</p>
+                    <p><strong>Recomendado:</strong> ${analysis.fondoEmergenciaNecesario.toLocaleString()}€</p>
+                    <p><strong>Cobertura:</strong> ${coberturaMeses.toFixed(1)} meses</p>
+                </div>
+                <div style="font-size: 3rem;">${Math.round((analysis.efectivoActual / analysis.fondoEmergenciaNecesario) * 100)}%</div>
+            </div>
+        `;
+    }
+
+    function mostrarDistribucionPatrimonio(analysis) {
+        const container = document.getElementById('allocationGrid');
+        const labels = {
+            cuentaCorriente: 'Cuenta Corriente',
+            cuentaRemunerada: 'Cuenta Remunerada',
+            rentaFija: 'Renta Fija',
+            rentaVariable: 'Renta Variable',
+            inmobiliario: 'Inmobiliario',
+            criptomonedas: 'Criptomonedas'
+        };
+
+        container.innerHTML = '';
+        
+        for (let key in analysis.distribucion) {
+            if (analysis.distribucion[key] > 0) {
+                const div = document.createElement('div');
+                div.className = 'allocation-item';
+                div.innerHTML = `
+                    <h4>${labels[key]}</h4>
+                    <div class="amount">${analysis.distribucion[key].toLocaleString()}€</div>
+                    <div class="percentage">${analysis.distribucionPorcentaje[key].toFixed(1)}%</div>
+                    <div class="yield">${analysis.yields[key]}% rentabilidad</div>
                 `;
-            });
-
-            // Recommended Distribution
-            const recommendedDist = document.getElementById('recommended-distribution');
-            recommendedDist.innerHTML = '<h3>Distribución Recomendada</h3>';
-            Object.entries(analysis.recommended).filter(([, v]) => v > 0).forEach(([k, v]) => {
-                recommendedDist.innerHTML += `<p>${getAssetName(k)}: ${v}%</p>`;
-            });
+                container.appendChild(div);
+            }
         }
 
-        function resetForm() {
-            document.getElementById('form-section').classList.remove('hidden');
-            document.getElementById('results-section').classList.add('hidden');
-            document.querySelectorAll('input').forEach(inp => inp.value = '');
+        // Gráfico de distribución
+        mostrarGraficoDistribucion(analysis);
+    }
+
+    function mostrarGraficoDistribucion(analysis) {
+        const ctx = document.getElementById('allocationChart').getContext('2d');
+        
+        if (allocationChart) {
+            allocationChart.destroy();
         }
 
-        // Show/Hide DCA section
-        document.getElementById('monthlyContribution').addEventListener('input', (e) => {
-            const dcaSection = document.getElementById('dca-section');
-            if (parseFloat(e.target.value) > 0) {
-                dcaSection.classList.remove('hidden');
-            } else {
-                dcaSection.classList.add('hidden');
+        const labels = [];
+        const data = [];
+        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+        
+        const labelMap = {
+            cuentaCorriente: 'Cuenta Corriente',
+            cuentaRemunerada: 'Cuenta Remunerada',
+            rentaFija: 'Renta Fija',
+            rentaVariable: 'Renta Variable',
+            inmobiliario: 'Inmobiliario',
+            criptomonedas: 'Criptomonedas'
+        };
+
+        let colorIndex = 0;
+        for (let key in analysis.distribucionPorcentaje) {
+            if (analysis.distribucionPorcentaje[key] > 0) {
+                labels.push(labelMap[key]);
+                data.push(analysis.distribucionPorcentaje[key]);
+                colorIndex++;
+            }
+        }
+
+        allocationChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors.slice(0, labels.length),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label;
+                                const value = context.parsed;
+                                const amount = analysis.distribucion[Object.keys(analysis.distribucion)[context.dataIndex]];
+                                return `${label}: ${value.toFixed(1)}% (${amount.toLocaleString()}€)`;
+                            }
+                        }
+                    }
+                }
             }
         });
+    }
 
-        // Update total DCA
-        const dcaInputs = ['dcaCashAccount', 'dcaSavingsAccount', 'dcaMoneyMarket', 'dcaBonds', 'dcaIndexFunds', 'dcaStocks', 'dcaRealEstate', 'dcaCrypto', 'dcaCommodities', 'dcaOther'];
-        dcaInputs.forEach(id => {
-            document.getElementById(id).addEventListener('input', () => {
-                const total = dcaInputs.reduce((sum, id) => sum + (parseFloat(document.getElementById(id).value) || 0), 0);
-                document.getElementById('total-dca').textContent = `Total DCA: €${total}`;
-            });
+    function mostrarRecomendaciones(recommendations) {
+        const container = document.getElementById('recommendations');
+        
+        if (recommendations.length === 0) {
+            container.innerHTML = `
+                <div class="recommendation">
+                    <h4>🎉 ¡Felicitaciones!</h4>
+                    <p>Tu distribución patrimonial está muy bien optimizada. Mantén el rumbo y revisa periódicamente.</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '<div class="recommendation"><h4>💡 Recomendaciones para optimizar tu patrimonio:</h4><ul>';
+        recommendations.forEach(rec => {
+            html += `<li>${rec}</li>`;
         });
-    </script>
+        html += '</ul></div>';
+        
+        container.innerHTML = html;
+    }
+
+    function mostrarAnalisisDCA(dcaAnalysis) {
+        const container = document.getElementById('dcaAnalysis');
+        
+        container.innerHTML = `
+            <div class="dca-info" style="background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); padding: 25px; border-radius: 15px; margin: 20px 0;">
+                <h4>📊 Tu estrategia DCA</h4>
+                <p>${dcaAnalysis.mensaje}</p>
+                ${dcaAnalysis.distribucion ? `<div style="margin: 15px 0;">${dcaAnalysis.distribucion}</div>` : ''}
+                ${dcaAnalysis.rentabilidadEsperada ? `<p><strong>🎯 Rentabilidad esperada DCA:</strong> ${dcaAnalysis.rentabilidadEsperada} anual</p>` : ''}
+                <p><strong>💡 ${dcaAnalysis.recomendacion}</strong></p>
+                ${dcaAnalysis.proyeccion ? `
+                    <div style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.7); border-radius: 10px;">
+                        <h5>📈 Proyección a 10 años:</h5>
+                        <p>Patrimonio proyectado: <strong>${dcaAnalysis.proyeccion[10].patrimonio.toLocaleString()}€</strong></p>
+                        <p>Total aportado: <strong>${dcaAnalysis.proyeccion[10].aportaciones.toLocaleString()}€</strong></p>
+                        <p>Ganancia proyectada: <strong>${(dcaAnalysis.proyeccion[10].patrimonio - dcaAnalysis.proyeccion[0].patrimonio - dcaAnalysis.proyeccion[10].aportaciones).toLocaleString()}€</strong></p>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    function mostrarOpinionInversion(opinion) {
+        const container = document.getElementById('investmentOpinion');
+        
+        container.innerHTML = `
+            <div class="recommendation">
+                <h4>${opinion.titulo}</h4>
+                <p>${opinion.opinion}</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                    <div>
+                        <h5 style="color: #28a745; margin-bottom: 10px;">✅ Ventajas:</h5>
+                        <ul>
+                            ${opinion.pros.map(pro => `<li>${pro}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div>
+                        <h5 style="color: #dc3545; margin-bottom: 10px;">⚠️ Desventajas:</h5>
+                        <ul>
+                            ${opinion.contras.map(contra => `<li>${contra}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
+                    <strong>📋 Mi recomendación:</strong> ${opinion.recomendacion}
+                </div>
+            </div>
+        `;
+    }
+
+    function mostrarGraficoCrecimiento(analysis) {
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        
+        if (growthChart) {
+            growthChart.destroy();
+        }
+
+        // Generar proyección de crecimiento con rentabilidad real
+        const proyeccion = [];
+        let patrimonio = analysis.patrimonio;
+        const rentabilidadPonderada = analysis.rentabilidadPonderada;
+        const inflacion = 0.025; // 2.5% inflación
+        
+        for (let año = 0; año <= 15; año++) {
+            proyeccion.push({
+                año: año,
+                patrimonio: patrimonio,
+                patrimonioReal: patrimonio / Math.pow(1 + inflacion, año), // Ajustado por inflación
+                conDCA: año === 0 ? patrimonio : proyeccion[año-1].conDCA * (1 + rentabilidadPonderada) + (analysis.dca * 12)
+            });
+            
+            patrimonio = patrimonio * (1 + rentabilidadPonderada);
+        }
+
+        const labels = proyeccion.map(p => p.año);
+        const dataPatrimonio = proyeccion.map(p => p.patrimonio);
+        const dataConDCA = proyeccion.map(p => p.conDCA);
+        const dataReal = proyeccion.map(p => p.patrimonioReal);
+
+        growthChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: `Sin DCA (${(rentabilidadPonderada * 100).toFixed(1)}% anual)`,
+                        data: dataPatrimonio,
+                        borderColor: '#36A2EB',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    },
+                    {
+                        label: `Con DCA ${analysis.dca}€/mes`,
+                        data: dataConDCA,
+                        borderColor: '#4BC0C0',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        tension: 0.4,
+                        fill: false
+                    },
+                    {
+                        label: 'Poder Adquisitivo Real',
+                        data: dataReal,
+                        borderColor: '#FF6384',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        tension: 0.4,
+                        fill: false,
+                        borderDash: [5, 5]
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y.toLocaleString() + '€';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + '€';
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Años'
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+    }
+
+    // Animación de números
+    function animateNumber(element, targetNumber, duration = 1500) {
+        const startNumber = 0;
+        const increment = targetNumber / (duration / 16);
+        let current = startNumber;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= targetNumber) {
+                current = targetNumber;
+                clearInterval(timer);
+            }
+            element.textContent = Math.round(current);
+        }, 16);
+    }
+
+    // Mejorar la animación del score
+    const originalMostrarResultados = mostrarResultados;
+    mostrarResultados = function(analysis) {
+        originalMostrarResultados(analysis);
+        
+        // Animar el score
+        setTimeout(() => {
+            const scoreElement = document.getElementById('scoreNumber');
+            animateNumber(scoreElement, analysis.score, 1500);
+        }, 500);
+    };
+
+    // Auto-completar ejemplo al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        // Rellenar ejemplo automáticamente para demostración
+        setTimeout(() => {
+            document.getElementById('gastosMensuales').value = '2500';
+            document.getElementById('dcaAmount').value = '500';
+            
+            // Patrimonio de ejemplo
+            document.getElementById('cuentaCorriente').value = '5000';
+            document.getElementById('cuentaRemunerada').value = '12000';
+            document.getElementById('rentaFija').value = '15000';
+            document.getElementById('rentaVariable').value = '25000';
+            document.getElementById('inmobiliario').value = '8000';
+            document.getElementById('criptomonedas').value = '2000';
+            
+            // Actualizar indicador de patrimonio total
+            actualizarPatrimonioTotal();
+            
+            // Configurar DCA de ejemplo
+            dcaDistribution = {
+                cuentaRemunerada: 50,
+                rentaFija: 100,
+                rentaVariable: 300,
+                inmobiliario: 50,
+                criptomonedas: 0
+            };
+            
+            // Mostrar indicador DCA
+            const indicator = document.getElementById('dcaIndicator');
+            const amount = document.getElementById('dcaConfiguredAmount');
+            indicator.classList.remove('hidden');
+            amount.textContent = '500€';
+            
+        }, 1000);
+    });
+
+    // Smooth scroll mejorado para enlaces internos
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // Prevenir envío accidental del formulario con Enter
+    document.getElementById('patrimonioForm').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
+            e.preventDefault();
+        }
+    });
+
+    // Validación en tiempo real para campos numéricos
+    function validarCampoNumerico(input) {
+        const valor = parseFloat(input.value);
+        if (valor < 0) {
+            input.value = 0;
+        }
+    }
+
+    // Aplicar validación a todos los inputs numéricos
+    document.querySelectorAll('input[type="number"]').forEach(input => {
+        input.addEventListener('blur', function() {
+            validarCampoNumerico(this);
+        });
+        
+        input.addEventListener('input', function() {
+            // Actualizar patrimonio total si es necesario
+            if (patrimonioInputs.includes(this.id)) {
+                actualizarPatrimonioTotal();
+            }
+        });
+    });
+
+    // Función para formatear números en inputs
+    function formatearNumero(numero) {
+        return new Intl.NumberFormat('es-ES').format(numero);
+    }
+
+    // Mejorar accesibilidad con navegación por teclado
+    document.addEventListener('keydown', function(e) {
+        // Cerrar modal con Escape
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('dcaModal');
+            if (modal.style.display === 'block') {
+                modal.style.display = 'none';
+            }
+        }
+    });
+
+    // Función para resetear formulario
+    function resetearFormulario() {
+        document.getElementById('patrimonioForm').reset();
+        dcaDistribution = {};
+        document.getElementById('dcaIndicator').classList.add('hidden');
+        document.getElementById('totalPatrimonioIndicator').classList.add('hidden');
+        document.getElementById('resultados').classList.add('hidden');
+        
+        // Resetear gráficos
+        if (growthChart) {
+            growthChart.destroy();
+            growthChart = null;
+        }
+        if (allocationChart) {
+            allocationChart.destroy();
+            allocationChart = null;
+        }
+    }
+
+    // Añadir botón de reset (opcional)
+    function añadirBotonReset() {
+        const resetButton = document.createElement('button');
+        resetButton.type = 'button';
+        resetButton.className = 'btn-secondary';
+        resetButton.textContent = '🔄 Resetear formulario';
+        resetButton.style.marginTop = '10px';
+        resetButton.onclick = resetearFormulario;
+        
+        const form = document.getElementById('patrimonioForm');
+        form.appendChild(resetButton);
+    }
+
+    // Llamar función para añadir botón reset al cargar
+    document.addEventListener('DOMContentLoaded', function() {
+        añadirBotonReset();
+    });
+
+    // Función para guardar/cargar configuración en localStorage (opcional)
+    function guardarConfiguracion() {
+        const config = {
+            gastosMensuales: document.getElementById('gastosMensuales').value,
+            perfilRiesgo: document.getElementById('perfilRiesgo').value,
+            dcaAmount: document.getElementById('dcaAmount').value,
+            patrimonio: {},
+            yields: {},
+            dcaDistribution: dcaDistribution,
+            preferencia: document.getElementById('preferenciaInversion').value
+        };
+        
+        patrimonioInputs.forEach(id => {
+            config.patrimonio[id] = document.getElementById(id).value;
+            config.yields[id] = document.getElementById('yield' + id.charAt(0).toUpperCase() + id.slice(1)).value;
+        });
+        
+        localStorage.setItem('patrimonioConfig', JSON.stringify(config));
+        alert('Configuración guardada');
+    }
+
+    function cargarConfiguracion() {
+        const config = localStorage.getItem('patrimonioConfig');
+        if (config) {
+            const data = JSON.parse(config);
+            
+            document.getElementById('gastosMensuales').value = data.gastosMensuales || '';
+            document.getElementById('perfilRiesgo').value = data.perfilRiesgo || 'conservador';
+            document.getElementById('dcaAmount').value = data.dcaAmount || '';
+            document.getElementById('preferenciaInversion').value = data.preferencia || 'renta-variable';
+            
+            if (data.patrimonio) {
+                patrimonioInputs.forEach(id => {
+                    if (data.patrimonio[id]) {
+                        document.getElementById(id).value = data.patrimonio[id];
+                    }
+                    if (data.yields && data.yields[id]) {
+                        document.getElementById('yield' + id.charAt(0).toUpperCase() + id.slice(1)).value = data.yields[id];
+                    }
+                });
+            }
+            
+            if (data.dcaDistribution) {
+                dcaDistribution = data.dcaDistribution;
+                const totalDCA = Object.values(dcaDistribution).reduce((a, b) => a + b, 0);
+                if (totalDCA > 0) {
+                    document.getElementById('dcaIndicator').classList.remove('hidden');
+                    document.getElementById('dcaConfiguredAmount').textContent = totalDCA + '€';
+                }
+            }
+            
+            actualizarPatrimonioTotal();
+            alert('Configuración cargada');
+        }
+    }
+
+    // Añadir botones de guardar/cargar (comentados por defecto)
+    /*
+    function añadirBotonesGuardarCargar() {
+        const saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.className = 'btn-secondary';
+        saveButton.textContent = '💾 Guardar configuración';
+        saveButton.style.marginRight = '10px';
+        saveButton.onclick = guardarConfiguracion;
+        
+        const loadButton = document.createElement('button');
+        loadButton.type = 'button';
+        loadButton.className = 'btn-secondary';
+        loadButton.textContent = '📂 Cargar configuración';
+        loadButton.onclick = cargarConfiguracion;
+        
+        const form = document.getElementById('patrimonioForm');
+        const container = document.createElement('div');
+        container.style.marginTop = '10px';
+        container.appendChild(saveButton);
+        container.appendChild(loadButton);
+        form.appendChild(container);
+    }
+    */
+
+    // Función para exportar resultados a PDF (placeholder)
+    function exportarPDF() {
+        // Esta función requeriría una librería como jsPDF
+        alert('Función de exportar PDF - Requiere implementación con jsPDF');
+    }
+
+    console.log('🚀 Sistema de Optimización del Patrimonio cargado exitosamente');
+    console.log('💡 Funcionalidades disponibles:');
+    console.log('  - Análisis detallado del patrimonio');
+    console.log('  - Configuración personalizada de DCA');
+    console.log('  - Rentabilidades personalizables por activo');
+    console.log('  - Proyecciones de crecimiento con inflación');
+    console.log('  - Recomendaciones inteligentes');
+    console.log('  - Interfaz responsive y moderna');
+</script>
+```
+
 </body>
 </html>
